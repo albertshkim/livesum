@@ -23,7 +23,4 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-// 관리자 화면(admin.html)에서 질문을 바꿀 때 사용하는 간단한 암호.
-// 브라우저 코드에 그대로 노출되므로 "진짜 보안"은 아니고,
-// 아무나 지우거나 질문을 바꾸지 못하게 막는 최소한의 장치입니다.
-const ADMIN_PASSCODE = "changeme";
+const ADMIN_PASSCODE = "albertkim";
