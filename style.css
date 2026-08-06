@@ -289,7 +289,212 @@ button.submit-btn:disabled {
   border-radius: 4px;
 }
 
+/* --- admin: bulk question entry --- */
+.section-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+textarea.textarea-lg {
+  width: 100%;
+  min-height: 380px;
+  resize: vertical;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 18px;
+  line-height: 1.8;
+  padding: 24px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+textarea.textarea-lg:focus { border-color: var(--accent); }
+
+.format-hint {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.7;
+  background: var(--surface);
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 14px;
+}
+.format-hint b { color: var(--accent); font-weight: 500; }
+
+.section-divider {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin: 44px 0 32px;
+}
+
+/* --- admin: question bank list --- */
+.question-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.question-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.question-item.active {
+  border-color: var(--accent);
+  background: linear-gradient(90deg, rgba(255,184,77,0.08), transparent 60%);
+}
+
+.q-number {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--bg);
+  background: var(--text-muted);
+  min-width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.question-item.active .q-number { background: var(--accent); }
+
+.q-text {
+  flex: 1;
+  font-size: 15px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.q-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn-small {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--line);
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.2s, color 0.2s;
+}
+.btn-small:hover { border-color: var(--accent); color: var(--accent); }
+.btn-small.active-label {
+  border-color: var(--accent);
+  color: var(--accent);
+  cursor: default;
+}
+.btn-small.danger:hover { border-color: #ff6b6b; color: #ff6b6b; }
+
+.empty-state-small {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  padding: 20px;
+  text-align: center;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+}
+
+/* --- board: copy button --- */
+.copy-btn {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  background: transparent;
+  color: var(--live);
+  border: 1px solid var(--live);
+  padding: 8px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.copy-btn:hover { background: var(--live); color: #06232a; }
+.copy-btn:disabled {
+  border-color: var(--line);
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+/* --- board: view toggle --- */
+.view-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.toggle-btn {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--line);
+  padding: 8px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
+.toggle-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #1a1204;
+}
+
+/* --- board: word cloud --- */
+.wordcloud-wrap {
+  position: relative;
+  width: 100%;
+  height: 560px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.wordcloud-wrap canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.wordcloud-wrap .empty-state {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  border: none;
+}
+
+@media (max-width: 560px) {
+  .wordcloud-wrap { height: 380px; }
+}
+
 @media (max-width: 560px) {
   .board-header { flex-direction: column; align-items: flex-start; }
   .counter { text-align: left; }
+  .question-item { flex-wrap: wrap; }
 }

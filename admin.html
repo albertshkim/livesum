@@ -21,35 +21,49 @@
 
   <div class="eyebrow"><span class="dot-live"></span>세션 관리</div>
   <h1 class="question-text" style="font-size:22px;border-left-color:var(--live);">
-    질문을 등록하거나 답변을 초기화합니다
+    질문을 미리 등록하고, 번호를 선택해 진행할 질문을 바꾸세요
   </h1>
 
-  <label style="display:block;font-family:var(--font-mono);font-size:12px;color:var(--text-muted);margin-bottom:8px;">
-    관리자 암호
-  </label>
-  <textarea id="passcodeInput" maxlength="100" style="min-height:44px;" placeholder="firebase-config.js 의 ADMIN_PASSCODE 값"></textarea>
+  <label class="section-label">관리자 암호</label>
+  <textarea id="passcodeInput" maxlength="100" style="min-height:44px;font-size:15px;padding:12px 16px;" placeholder="firebase-config.js 의 ADMIN_PASSCODE 값"></textarea>
 
-  <label style="display:block;font-family:var(--font-mono);font-size:12px;color:var(--text-muted);margin:20px 0 8px;">
-    새 질문
-  </label>
-  <textarea id="questionInput" maxlength="200" placeholder="예) 오늘 워크숍에서 가장 인상 깊었던 순간은 무엇인가요?"></textarea>
+  <hr class="section-divider" />
+
+  <label class="section-label">질문 일괄 등록</label>
+  <div class="format-hint">
+    한 줄에 <b>번호 + 마침표 + 질문</b> 형식으로 여러 개를 한꺼번에 붙여넣으세요.<br>
+    예)<br>
+    1. 직업은 무엇인가요?<br>
+    2. 연령대는 어떻게 되나요?<br>
+    3. 오늘 세션에서 가장 기억에 남는 점은?<br>
+    같은 번호를 다시 등록하면 그 질문 내용이 새 내용으로 교체됩니다.
+  </div>
+  <textarea id="bulkQuestionInput" class="textarea-lg" placeholder="1. 직업은 무엇인가요?&#10;2. 연령대는 어떻게 되나요?&#10;3. 오늘 세션에서 가장 기억에 남는 점은?"></textarea>
 
   <div class="form-footer">
-    <span class="char-count" id="currentQ"></span>
-    <button class="submit-btn" id="setQuestionBtn">질문 등록</button>
+    <span class="char-count" id="parsedPreview">입력한 질문 0개 인식됨</span>
+    <button class="submit-btn" id="registerBtn">일괄 등록</button>
   </div>
 
   <div class="status-msg" id="statusMsg1"></div>
 
-  <hr style="border:none;border-top:1px solid var(--line);margin:40px 0;" />
+  <hr class="section-divider" />
 
-  <label style="display:block;font-family:var(--font-mono);font-size:12px;color:var(--text-muted);margin-bottom:12px;">
-    위험 구역
-  </label>
-  <button class="submit-btn" id="resetBtn" style="background:#3a1f1f;color:#ff9b9b;">
-    모든 답변 초기화
-  </button>
+  <label class="section-label">등록된 질문 목록 · 번호를 선택하면 해당 질문이 참가자 화면에 즉시 표시됩니다</label>
+  <div class="question-list" id="questionList">
+    <div class="empty-state-small">아직 등록된 질문이 없습니다. 위에서 먼저 등록해주세요.</div>
+  </div>
+
   <div class="status-msg" id="statusMsg2"></div>
+
+  <hr class="section-divider" />
+
+  <label class="section-label">위험 구역</label>
+  <p class="hint" style="margin-top:0;">현재 진행 중인 질문의 답변만 초기화합니다. 다른 질문에 쌓인 답변은 영향받지 않습니다.</p>
+  <button class="submit-btn" id="resetBtn" style="background:#3a1f1f;color:#ff9b9b;">
+    현재 질문의 답변 초기화
+  </button>
+  <div class="status-msg" id="statusMsg3"></div>
 
 </div>
 
