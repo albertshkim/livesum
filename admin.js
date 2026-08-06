@@ -5,9 +5,11 @@
 //   questions/{번호}          -> { text, updatedAt }
 //   session/activeQuestionNumber -> 현재 참가자 화면에 노출 중인 질문 번호
 //   answers/{번호}/{pushId}   -> { text, ts }   (질문별로 영구 저장)
+//
+// ※ 이 관리자 화면은 암호 없이 동작합니다. admin.html 링크는
+//   참가자에게 공유하지 말고, 진행자만 알고 있는 별도 링크로 관리하세요.
 // ------------------------------------------------------------
 
-const passcodeInput = document.getElementById('passcodeInput');
 const bulkInput = document.getElementById('bulkQuestionInput');
 const parsedPreview = document.getElementById('parsedPreview');
 const registerBtn = document.getElementById('registerBtn');
@@ -38,10 +40,6 @@ if (typeof firebaseConfig !== 'undefined' && firebaseConfig.apiKey !== 'YOUR_API
     '<div class="setup-banner">⚠️ 아직 Firebase 설정이 되지 않았습니다. ' +
     '<code>firebase-config.js</code> 파일을 열어 본인의 Firebase 프로젝트 값으로 채워주세요. ' +
     '(README.md 참고)</div>';
-}
-
-function checkPasscode() {
-  return passcodeInput.value.trim() === ADMIN_PASSCODE;
 }
 
 function showStatus(el, msg, isError) {
@@ -83,10 +81,6 @@ bulkInput.addEventListener('input', updatePreview);
 registerBtn.addEventListener('click', () => {
   if (!dbReady) {
     showStatus(statusEl1, 'Firebase 설정이 완료되지 않았습니다.', true);
-    return;
-  }
-  if (!checkPasscode()) {
-    showStatus(statusEl1, '암호가 올바르지 않습니다.', true);
     return;
   }
   const parsed = parseBulkQuestions(bulkInput.value);
@@ -186,10 +180,6 @@ function renderQuestionList() {
 }
 
 function activateQuestion(num) {
-  if (!checkPasscode()) {
-    showStatus(statusEl2, '암호가 올바르지 않습니다.', true);
-    return;
-  }
   db.ref('session/activeQuestionNumber').set(num).then(() => {
     showStatus(statusEl2, num + '번 질문이 참가자 화면에 표시됩니다 ✓', false);
   }).catch((err) => {
@@ -198,10 +188,6 @@ function activateQuestion(num) {
 }
 
 function deleteQuestion(num) {
-  if (!checkPasscode()) {
-    showStatus(statusEl2, '암호가 올바르지 않습니다.', true);
-    return;
-  }
   if (!confirm(num + '번 질문을 삭제할까요? (해당 질문에 쌓인 답변은 유지됩니다)')) return;
 
   db.ref('questions/' + num).remove().then(() => {
@@ -220,10 +206,6 @@ function deleteQuestion(num) {
 resetBtn.addEventListener('click', () => {
   if (!dbReady) {
     showStatus(statusEl3, 'Firebase 설정이 완료되지 않았습니다.', true);
-    return;
-  }
-  if (!checkPasscode()) {
-    showStatus(statusEl3, '암호가 올바르지 않습니다.', true);
     return;
   }
   if (!activeNumber) {
@@ -245,10 +227,6 @@ resetBtn.addEventListener('click', () => {
 resetAllBtn.addEventListener('click', () => {
   if (!dbReady) {
     showStatus(statusEl4, 'Firebase 설정이 완료되지 않았습니다.', true);
-    return;
-  }
-  if (!checkPasscode()) {
-    showStatus(statusEl4, '암호가 올바르지 않습니다.', true);
     return;
   }
   if (!confirm('정말로 모든 질문과 모든 답변을 삭제할까요? 이 작업은 되돌릴 수 없습니다.')) {
