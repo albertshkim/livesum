@@ -1,5 +1,8 @@
 // ------------------------------------------------------------
 // index.html (질문/제출 화면) 동작 로직
+//
+// 관리자가 session/activeQuestionNumber 로 지정한 번호의 질문을
+// 실시간으로 가져와 보여주고, 답변은 answers/{번호} 아래에 영구 저장합니다.
 // ------------------------------------------------------------
 
 const questionEl = document.getElementById('questionText');
@@ -11,8 +14,9 @@ const setupBanner = document.getElementById('setupBanner');
 
 let dbReady = false;
 let db = null;
+let activeNumber = null;
+let questionListener = null;
 
-// firebase-config.js 값이 채워졌는지 확인
 if (typeof firebaseConfig !== 'undefined' && firebaseConfig.apiKey !== 'YOUR_API_KEY') {
   try {
     firebase.initializeApp(firebaseConfig);
@@ -28,14 +32,31 @@ if (typeof firebaseConfig !== 'undefined' && firebaseConfig.apiKey !== 'YOUR_API
     '(README.md 참고)</div>';
 }
 
-// 질문 텍스트 실시간 반영 (관리자가 admin.html에서 바꾸면 여기도 즉시 갱신)
 if (dbReady) {
-  db.ref('session/question').on('value', (snap) => {
-    const q = snap.val();
-    questionEl.textContent = q && q.trim() ? q : '아직 등록된 질문이 없습니다. (admin.html에서 설정)';
+  // 관리자가 선택한 "현재 질문 번호"를 구독
+  db.ref('session/activeQuestionNumber').on('value', (snap) => {
+    activeNumber = snap.val();
+    attachQuestionListener();
   });
 } else {
   questionEl.textContent = '연결 대기 중…';
+}
+
+function attachQuestionListener() {
+  if (questionListener) {
+    questionListener.off();
+    questionListener = null;
+  }
+  if (!activeNumber) {
+    questionEl.textContent = '아직 진행 중인 질문이 없습니다. 잠시만 기다려주세요.';
+    return;
+  }
+  const ref = db.ref('questions/' + activeNumber + '/text');
+  ref.on('value', (snap) => {
+    const text = snap.val();
+    questionEl.textContent = text && text.trim() ? text : '질문을 불러오는 중…';
+  });
+  questionListener = ref;
 }
 
 // 글자수 표시
@@ -58,6 +79,10 @@ function submitAnswer() {
     showStatus('Firebase 설정이 완료되지 않아 제출할 수 없습니다.', true);
     return;
   }
+  if (!activeNumber) {
+    showStatus('현재 진행 중인 질문이 없습니다.', true);
+    return;
+  }
   if (!text) {
     showStatus('답변 내용을 입력해주세요.', true);
     return;
@@ -66,7 +91,7 @@ function submitAnswer() {
   submitBtn.disabled = true;
   showStatus('제출 중…', false);
 
-  db.ref('session/answers').push({
+  db.ref('answers/' + activeNumber).push({
     text: text,
     ts: firebase.database.ServerValue.TIMESTAMP
   }).then(() => {
