@@ -14,7 +14,7 @@ import { initializeApp } from "firebase/app";
 const firebaseConfig = {
   apiKey: "AIzaSyBvuY2KWvmJ7Ug0Ec8g9k_Df0mvK5oXnSk",
   authDomain: "albert-livesum.firebaseapp.com",
-  databaseURL: "https://albert-livesum-default-rtdb.asia-southeast1.firebasedatabase.app",
+  databaseURL: "https://albert-livesum-default-rtdb.asia-southeast1.firebasedatabase.app/:null",
   projectId: "albert-livesum",
   storageBucket: "albert-livesum.firebasestorage.app",
   messagingSenderId: "754653995069",
