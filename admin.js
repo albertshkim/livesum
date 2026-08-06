@@ -13,9 +13,11 @@ const parsedPreview = document.getElementById('parsedPreview');
 const registerBtn = document.getElementById('registerBtn');
 const questionListEl = document.getElementById('questionList');
 const resetBtn = document.getElementById('resetBtn');
+const resetAllBtn = document.getElementById('resetAllBtn');
 const statusEl1 = document.getElementById('statusMsg1');
 const statusEl2 = document.getElementById('statusMsg2');
 const statusEl3 = document.getElementById('statusMsg3');
+const statusEl4 = document.getElementById('statusMsg4');
 const setupBanner = document.getElementById('setupBanner');
 
 let dbReady = false;
@@ -234,5 +236,39 @@ resetBtn.addEventListener('click', () => {
     showStatus(statusEl3, activeNumber + '번 질문의 답변이 초기화되었습니다 ✓', false);
   }).catch((err) => {
     showStatus(statusEl3, '오류: ' + err.message, true);
+  });
+});
+
+// ------------------------------------------------------------
+// 4) 전체 초기화: 등록된 모든 질문 + 모든 답변 + 현재 진행 질문 정보 삭제
+// ------------------------------------------------------------
+resetAllBtn.addEventListener('click', () => {
+  if (!dbReady) {
+    showStatus(statusEl4, 'Firebase 설정이 완료되지 않았습니다.', true);
+    return;
+  }
+  if (!checkPasscode()) {
+    showStatus(statusEl4, '암호가 올바르지 않습니다.', true);
+    return;
+  }
+  if (!confirm('정말로 모든 질문과 모든 답변을 삭제할까요? 이 작업은 되돌릴 수 없습니다.')) {
+    return;
+  }
+  const typed = prompt('마지막 확인입니다. 계속하려면 아래 칸에 "전체삭제" 라고 입력해주세요.');
+  if (typed !== '전체삭제') {
+    showStatus(statusEl4, '입력값이 일치하지 않아 취소되었습니다.', true);
+    return;
+  }
+
+  db.ref().update({
+    questions: null,
+    answers: null,
+    session: null
+  }).then(() => {
+    bulkInput.value = '';
+    updatePreview();
+    showStatus(statusEl4, '모든 질문과 답변이 초기화되었습니다 ✓', false);
+  }).catch((err) => {
+    showStatus(statusEl4, '오류: ' + err.message, true);
   });
 });
