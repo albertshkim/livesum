@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>집계 보드</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">ANON · BOARD</div>
+  <a class="nav-link" href="index.html">← 답변하러 가기</a>
+</div>
+
+<div class="wrap-wide">
+
+  <div id="setupBanner"></div>
+
+  <div class="board-header">
+    <div>
+      <div class="eyebrow"><span class="dot-live"></span>실시간 집계 중</div>
+      <h1 class="board-question" id="questionText">질문을 불러오는 중…</h1>
+    </div>
+    <div class="counter">
+      <span class="num" id="answerCount">0</span>
+      <span class="label">답변</span>
+    </div>
+  </div>
+
+  <div class="board-grid" id="boardGrid">
+    <div class="empty-state">아직 도착한 답변이 없습니다.</div>
+  </div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="board.js"></script>
+
+</body>
+</html>

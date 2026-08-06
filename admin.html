@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>관리자</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">ANON · BOARD / ADMIN</div>
+  <a class="nav-link" href="board.html">집계 보드 보기 →</a>
+</div>
+
+<div class="wrap">
+
+  <div id="setupBanner"></div>
+
+  <div class="eyebrow"><span class="dot-live"></span>세션 관리</div>
+  <h1 class="question-text" style="font-size:22px;border-left-color:var(--live);">
+    질문을 등록하거나 답변을 초기화합니다
+  </h1>
+
+  <label style="display:block;font-family:var(--font-mono);font-size:12px;color:var(--text-muted);margin-bottom:8px;">
+    관리자 암호
+  </label>
+  <textarea id="passcodeInput" maxlength="100" style="min-height:44px;" placeholder="firebase-config.js 의 ADMIN_PASSCODE 값"></textarea>
+
+  <label style="display:block;font-family:var(--font-mono);font-size:12px;color:var(--text-muted);margin:20px 0 8px;">
+    새 질문
+  </label>
+  <textarea id="questionInput" maxlength="200" placeholder="예) 오늘 워크숍에서 가장 인상 깊었던 순간은 무엇인가요?"></textarea>
+
+  <div class="form-footer">
+    <span class="char-count" id="currentQ"></span>
+    <button class="submit-btn" id="setQuestionBtn">질문 등록</button>
+  </div>
+
+  <div class="status-msg" id="statusMsg1"></div>
+
+  <hr style="border:none;border-top:1px solid var(--line);margin:40px 0;" />
+
+  <label style="display:block;font-family:var(--font-mono);font-size:12px;color:var(--text-muted);margin-bottom:12px;">
+    위험 구역
+  </label>
+  <button class="submit-btn" id="resetBtn" style="background:#3a1f1f;color:#ff9b9b;">
+    모든 답변 초기화
+  </button>
+  <div class="status-msg" id="statusMsg2"></div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="admin.js"></script>
+
+</body>
+</html>

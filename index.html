@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>익명 답변 보드</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">ANON · BOARD</div>
+  <a class="nav-link" href="board.html">집계 보드 보기 →</a>
+</div>
+
+<div class="wrap">
+
+  <div id="setupBanner"></div>
+
+  <div class="eyebrow"><span class="dot-live"></span>지금 답변을 받고 있어요</div>
+
+  <h1 class="question-text" id="questionText">질문을 불러오는 중…</h1>
+
+  <textarea id="answerInput" maxlength="500" placeholder="여기에 답변을 적어주세요. 이름은 저장되지 않습니다."></textarea>
+
+  <div class="form-footer">
+    <span class="char-count"><span id="charCount">0</span> / 500</span>
+    <button class="submit-btn" id="submitBtn">답변 제출</button>
+  </div>
+
+  <div class="status-msg" id="statusMsg"></div>
+
+  <p class="hint">
+    이 답변은 무기명으로 저장되며, 누가 보냈는지 식별할 수 있는 정보는 함께 저장되지 않습니다.
+    제출 즉시 <a href="board.html" style="color:var(--accent)">집계 보드</a>에 실시간으로 표시됩니다.
+  </p>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="ask.js"></script>
+
+</body>
+</html>
