@@ -65,6 +65,24 @@
 
   <hr class="section-divider" />
 
+  <label class="section-label">질문 글자 크기 · 참가자 화면과 집계 보드에 동시 적용됩니다</label>
+  <div class="fontsize-control">
+    <div class="fontsize-preview" id="fontsizePreview">예시) 오늘 세션에서 가장 기억에 남는 점은 무엇인가요?</div>
+    <div class="fontsize-row">
+      <input type="range" id="fontSizeSlider" min="14" max="48" step="1" value="20" />
+      <span class="fontsize-value" id="fontSizeValue">20px</span>
+    </div>
+    <div class="fontsize-presets">
+      <button class="btn-small" type="button" data-size="16">작게</button>
+      <button class="btn-small" type="button" data-size="20">보통</button>
+      <button class="btn-small" type="button" data-size="26">크게</button>
+      <button class="btn-small" type="button" data-size="34">아주 크게</button>
+    </div>
+  </div>
+  <div class="status-msg" id="statusMsg5"></div>
+
+  <hr class="section-divider" />
+
   <label class="section-label">위험 구역</label>
   <p class="hint" style="margin-top:0;">현재 진행 중인 질문의 답변만 초기화합니다. 다른 질문에 쌓인 답변은 영향받지 않습니다.</p>
   <button class="submit-btn" id="resetBtn" style="background:#3a1f1f;color:#ff9b9b;">

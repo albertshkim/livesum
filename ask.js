@@ -39,6 +39,12 @@ if (dbReady) {
     activeNumber = snap.val();
     attachQuestionListener();
   });
+
+  // 관리자가 설정한 질문 글자 크기를 실시간 반영
+  db.ref('session/questionFontSize').on('value', (snap) => {
+    const px = snap.val();
+    questionEl.style.fontSize = px ? px + 'px' : '';
+  });
 } else {
   questionEl.textContent = '연결 대기 중…';
 }

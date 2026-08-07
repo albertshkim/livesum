@@ -146,10 +146,21 @@ a { color: inherit; }
   margin: 0;
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: clamp(19px, 2.6vw, 25px);
+  font-size: clamp(16px, 1.8vw, 20px);
   line-height: 1.5;
   color: var(--text);
   padding-top: 3px;
+}
+
+/* board.html 헤더에서 쓰는 변형: 좌측 정렬, 카운터와 나란히 배치 */
+.board-header-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.question-card-board {
+  max-width: 640px;
+  margin-bottom: 0;
 }
 
 /* --- form --- */
@@ -224,7 +235,7 @@ button.submit-btn:disabled {
 /* --- board page --- */
 .board-header {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 24px;
   flex-wrap: wrap;
@@ -474,6 +485,49 @@ textarea.textarea-lg:focus { border-color: var(--accent); }
   border-color: var(--line);
   color: var(--text-muted);
   cursor: not-allowed;
+}
+
+/* --- admin: question font size control --- */
+.fontsize-control {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 22px 24px;
+}
+
+.fontsize-preview {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.5;
+  margin-bottom: 20px;
+  min-height: 1.5em;
+}
+
+.fontsize-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+input[type="range"] {
+  flex: 1;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+.fontsize-value {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-muted);
+  min-width: 46px;
+  text-align: right;
+}
+
+.fontsize-presets {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
 }
 
 /* --- board: view toggle --- */

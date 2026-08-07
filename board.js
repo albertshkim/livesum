@@ -9,6 +9,7 @@
 // ------------------------------------------------------------
 
 const questionEl = document.getElementById('questionText');
+const questionNumberEl = document.getElementById('questionNumber');
 const questionLabelEl = document.getElementById('questionLabel');
 const gridEl = document.getElementById('boardGrid');
 const countEl = document.getElementById('answerCount');
@@ -53,6 +54,12 @@ if (dbReady) {
     activeNumber = snap.val();
     switchToQuestion(activeNumber);
   });
+
+  // 관리자가 설정한 질문 글자 크기를 실시간 반영
+  db.ref('session/questionFontSize').on('value', (snap) => {
+    const px = snap.val();
+    questionEl.style.fontSize = px ? px + 'px' : '';
+  });
 } else {
   questionEl.textContent = '연결 대기 중…';
 }
@@ -72,11 +79,13 @@ function switchToQuestion(num) {
 
   if (!num) {
     questionLabelEl.textContent = '대기 중';
+    questionNumberEl.textContent = '–';
     questionEl.textContent = '아직 진행 중인 질문이 없습니다.';
     return;
   }
 
-  questionLabelEl.textContent = num + '번 질문 · 실시간 집계 중';
+  questionLabelEl.textContent = '실시간 집계 중';
+  questionNumberEl.textContent = num;
 
   questionRef = db.ref('questions/' + num + '/text');
   questionRef.on('value', (snap) => {

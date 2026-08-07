@@ -16,10 +16,15 @@ const registerBtn = document.getElementById('registerBtn');
 const questionListEl = document.getElementById('questionList');
 const resetBtn = document.getElementById('resetBtn');
 const resetAllBtn = document.getElementById('resetAllBtn');
+const fontSizeSlider = document.getElementById('fontSizeSlider');
+const fontSizeValue = document.getElementById('fontSizeValue');
+const fontsizePreview = document.getElementById('fontsizePreview');
+const fontsizePresetBtns = document.querySelectorAll('.fontsize-presets .btn-small');
 const statusEl1 = document.getElementById('statusMsg1');
 const statusEl2 = document.getElementById('statusMsg2');
 const statusEl3 = document.getElementById('statusMsg3');
 const statusEl4 = document.getElementById('statusMsg4');
+const statusEl5 = document.getElementById('statusMsg5');
 const setupBanner = document.getElementById('setupBanner');
 
 let dbReady = false;
@@ -248,5 +253,56 @@ resetAllBtn.addEventListener('click', () => {
     showStatus(statusEl4, '모든 질문과 답변이 초기화되었습니다 ✓', false);
   }).catch((err) => {
     showStatus(statusEl4, '오류: ' + err.message, true);
+  });
+});
+
+// ------------------------------------------------------------
+// 5) 질문 글자 크기 조절 (참가자 화면 · 집계 보드에 실시간 반영)
+// ------------------------------------------------------------
+let fontSizeSaveTimer = null;
+const DEFAULT_FONT_SIZE = 20;
+
+function applyPreviewSize(px) {
+  fontsizePreview.style.fontSize = px + 'px';
+  fontSizeValue.textContent = px + 'px';
+}
+
+function saveFontSize(px) {
+  if (!dbReady) {
+    showStatus(statusEl5, 'Firebase 설정이 완료되지 않았습니다.', true);
+    return;
+  }
+  db.ref('session/questionFontSize').set(Number(px)).then(() => {
+    showStatus(statusEl5, '글자 크기가 적용되었습니다 (' + px + 'px) ✓', false);
+  }).catch((err) => {
+    showStatus(statusEl5, '오류: ' + err.message, true);
+  });
+}
+
+function scheduleSaveFontSize(px) {
+  if (fontSizeSaveTimer) clearTimeout(fontSizeSaveTimer);
+  fontSizeSaveTimer = setTimeout(() => saveFontSize(px), 400);
+}
+
+if (dbReady) {
+  db.ref('session/questionFontSize').on('value', (snap) => {
+    const px = snap.val() || DEFAULT_FONT_SIZE;
+    fontSizeSlider.value = px;
+    applyPreviewSize(px);
+  });
+}
+
+fontSizeSlider.addEventListener('input', () => {
+  const px = fontSizeSlider.value;
+  applyPreviewSize(px);
+  scheduleSaveFontSize(px);
+});
+
+fontsizePresetBtns.forEach((btn) => {
+  btn.addEventListener('click', () => {
+    const px = btn.getAttribute('data-size');
+    fontSizeSlider.value = px;
+    applyPreviewSize(px);
+    saveFontSize(px);
   });
 });
