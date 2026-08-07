@@ -6,6 +6,7 @@
 // ------------------------------------------------------------
 
 const questionEl = document.getElementById('questionText');
+const questionNumberEl = document.getElementById('questionNumber');
 const inputEl = document.getElementById('answerInput');
 const submitBtn = document.getElementById('submitBtn');
 const statusEl = document.getElementById('statusMsg');
@@ -48,9 +49,11 @@ function attachQuestionListener() {
     questionListener = null;
   }
   if (!activeNumber) {
+    questionNumberEl.textContent = '–';
     questionEl.textContent = '아직 진행 중인 질문이 없습니다. 잠시만 기다려주세요.';
     return;
   }
+  questionNumberEl.textContent = activeNumber;
   const ref = db.ref('questions/' + activeNumber + '/text');
   ref.on('value', (snap) => {
     const text = snap.val();
