@@ -21,6 +21,13 @@ const viewCardBtn = document.getElementById('viewCardBtn');
 const wordcloudWrap = document.getElementById('wordcloudWrap');
 const wordcloudCanvas = document.getElementById('wordcloudCanvas');
 const cloudEmptyState = document.getElementById('cloudEmptyState');
+const nounFreqWrap = document.getElementById('nounFreqWrap');
+const nounFreqListEl = document.getElementById('nounFreqList');
+const originalWrap = document.getElementById('originalWrap');
+const originalListEl = document.getElementById('originalList');
+const originalCountLabel = document.getElementById('originalCountLabel');
+const clearSelectionBtn = document.getElementById('clearSelectionBtn');
+const showAllOriginalsBtn = document.getElementById('showAllOriginalsBtn');
 
 let dbReady = false;
 let db = null;
@@ -32,6 +39,9 @@ let lastCard = null;
 let answerTexts = []; // 복사/워드클라우드용으로 답변 원문을 순서대로 보관
 let currentView = 'cloud'; // 'cloud' | 'card'
 let redrawTimer = null;
+let latestNounList = [];
+let selectedWords = new Set(); // 명사 빈도표에서 클릭으로 선택한 단어들 (OR 조건)
+let showAllOriginals = false; // "모든 원문 보기" 토글 상태
 
 if (typeof firebaseConfig !== 'undefined' && firebaseConfig.apiKey !== 'YOUR_API_KEY') {
   try {
@@ -73,6 +83,8 @@ function switchToQuestion(num) {
   count = 0;
   lastCard = null;
   answerTexts = [];
+  selectedWords.clear();
+  showAllOriginals = false;
   countEl.textContent = '0';
   gridEl.innerHTML = '<div class="empty-state">아직 도착한 답변이 없습니다.</div>';
   scheduleCloudRedraw();
@@ -134,11 +146,17 @@ function setView(view) {
   currentView = view;
   viewCloudBtn.classList.toggle('active', view === 'cloud');
   viewCardBtn.classList.toggle('active', view === 'card');
-  wordcloudWrap.style.display = view === 'cloud' ? 'block' : 'none';
-  gridEl.style.display = view === 'card' ? 'grid' : 'none';
-  if (view === 'cloud') redrawWordCloud();
+  const showCloud = view === 'cloud';
+  wordcloudWrap.style.display = showCloud ? 'block' : 'none';
+  nounFreqWrap.style.display = showCloud ? 'block' : 'none';
+  originalWrap.style.display = showCloud ? 'block' : 'none';
+  gridEl.style.display = showCloud ? 'none' : 'grid';
+  if (showCloud) redrawWordCloud();
 }
-setView('cloud');
+// 초기 화면 상태(워드클라우드 보기)는 board.html의 기본 마크업과 이미 일치하므로
+// 여기서 setView를 즉시 호출하지 않습니다. (파일 아래쪽에 정의된 상수들이
+// 아직 초기화되기 전이라 즉시 호출하면 오류가 나서, 최초 렌더링은
+// switchToQuestion() -> scheduleCloudRedraw()의 비동기 호출에 맡깁니다.)
 
 // ------------------------------------------------------------
 // 답변 텍스트 -> 단어 빈도 -> 워드클라우드 렌더링
@@ -152,12 +170,16 @@ const STOPWORDS = new Set([
   '수', '더', '좀', '이런', '저런', '그런', '이거', '저거', '그거'
 ]);
 
-function tokenize(text) {
+function splitWords(text) {
   return text
     .replace(/[.,!?~^;:()\[\]{}"'“”‘’·…\-_/\\|<>@#$%^&*+=]/g, ' ')
     .split(/\s+/)
     .map((w) => w.trim())
-    .filter((w) => w.length > 1 && !STOPWORDS.has(w));
+    .filter(Boolean);
+}
+
+function tokenize(text) {
+  return splitWords(text).filter((w) => w.length > 1 && !STOPWORDS.has(w));
 }
 
 function buildFrequencyList(texts) {
@@ -173,6 +195,140 @@ function buildFrequencyList(texts) {
     .slice(0, 100); // 상단 100개 단어만 표시 (가독성)
 }
 
+// ------------------------------------------------------------
+// 명사 추정: 완전한 형태소 분석기 없이, 흔히 쓰이는 조사(은/는/이/가/을/를 등)를
+// 단어 끝에서 제거하는 규칙 기반 방식입니다. 100% 정확하지는 않지만
+// 실시간 워드클라우드 보조 지표로는 충분히 쓸만합니다.
+// ------------------------------------------------------------
+
+// 긴 조사부터 먼저 매칭되도록 길이 내림차순으로 정렬해서 사용
+const JOSA_SUFFIXES = [
+  '으로부터', '에게서는', '한테서는',
+  '이라고는', '이라는건', '이었지만', '였지만은',
+  '에게서', '한테서', '으로써', '이라며', '이라서', '이라도', '이라면', '이라고',
+  '에서는', '으로는', '에게는', '한테는', '까지는', '부터는', '이지만', '지만도',
+  '이라도', '이나마', '이든지', '든지는',
+  '에서', '으로', '에게', '한테', '까지', '부터', '마다', '조차', '밖에', '마저',
+  '이라', '라는', '라고', '이나', '이야', '이여', '지만', '든지',
+  '들이', '들을', '들의', '들도', '들은', '들과', '들에',
+  '이었', '였다', '한다', '했다', '되어', '되는', '하는', '이며', '이고',
+  '와는', '과는', '에는', '로는',
+  '은', '는', '이', '가', '을', '를', '에', '와', '과', '도', '만', '의', '로', '나', '랑', '며'
+].sort((a, b) => b.length - a.length);
+
+function stripJosa(word) {
+  for (let i = 0; i < JOSA_SUFFIXES.length; i++) {
+    const suf = JOSA_SUFFIXES[i];
+    if (word.length - suf.length >= 2 && word.endsWith(suf)) {
+      return word.slice(0, word.length - suf.length);
+    }
+  }
+  return word;
+}
+
+function extractNouns(texts) {
+  const freq = {};
+  texts.forEach((text) => {
+    splitWords(text).forEach((rawWord) => {
+      const isKorean = /[가-힣]/.test(rawWord);
+      const word = isKorean ? stripJosa(rawWord) : rawWord.toLowerCase();
+      if (word.length < 2 || STOPWORDS.has(word)) return;
+      freq[word] = (freq[word] || 0) + 1;
+    });
+  });
+  return Object.keys(freq)
+    .map((word) => [word, freq[word]])
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 15);
+}
+
+function renderNounFreqTable(list) {
+  latestNounList = list || [];
+
+  if (latestNounList.length === 0) {
+    nounFreqListEl.innerHTML = '<div class="empty-state-small">아직 집계할 답변이 없습니다.</div>';
+    return;
+  }
+  const maxCount = latestNounList[0][1];
+  nounFreqListEl.innerHTML = '';
+  latestNounList.forEach((pair, idx) => {
+    const word = pair[0];
+    const cnt = pair[1];
+    const row = document.createElement('div');
+    row.className = 'noun-freq-row' + (selectedWords.has(word) ? ' selected' : '');
+    row.innerHTML =
+      '<span class="noun-freq-rank">' + (idx + 1) + '</span>' +
+      '<span class="noun-freq-word">' + escapeHtml(word) + '</span>' +
+      '<span class="noun-freq-bar-wrap"><span class="noun-freq-bar" style="width:' +
+        Math.round((cnt / maxCount) * 100) + '%"></span></span>' +
+      '<span class="noun-freq-count">' + cnt + '</span>';
+    row.addEventListener('click', () => toggleWordSelection(word));
+    nounFreqListEl.appendChild(row);
+  });
+}
+
+// ------------------------------------------------------------
+// 단어 선택(다중 · OR 조건) 및 원문 필터링
+// ------------------------------------------------------------
+function toggleWordSelection(word) {
+  if (selectedWords.has(word)) {
+    selectedWords.delete(word);
+  } else {
+    selectedWords.add(word);
+    showAllOriginals = false; // 단어를 선택하면 "모든 원문 보기"는 해제
+  }
+  renderNounFreqTable(latestNounList);
+  renderOriginalTexts();
+}
+
+clearSelectionBtn.addEventListener('click', () => {
+  selectedWords.clear();
+  showAllOriginals = false;
+  renderNounFreqTable(latestNounList);
+  renderOriginalTexts();
+});
+
+showAllOriginalsBtn.addEventListener('click', () => {
+  showAllOriginals = !showAllOriginals;
+  if (showAllOriginals) selectedWords.clear();
+  renderNounFreqTable(latestNounList);
+  renderOriginalTexts();
+});
+
+function renderOriginalTexts() {
+  showAllOriginalsBtn.classList.toggle('active', showAllOriginals);
+
+  let matched = null;
+
+  if (showAllOriginals) {
+    matched = answerTexts;
+    originalCountLabel.textContent = '· 전체 ' + matched.length + '개';
+  } else if (selectedWords.size > 0) {
+    const words = Array.from(selectedWords);
+    matched = answerTexts.filter((t) => words.some((w) => t.includes(w)));
+    originalCountLabel.textContent =
+      '· "' + words.join('", "') + '" 포함 (OR) ' + matched.length + '개';
+  } else {
+    originalCountLabel.textContent = '· 단어를 클릭해서 필터링하세요 (여러 개 선택 시 OR 조건)';
+  }
+
+  if (matched === null) {
+    originalListEl.innerHTML = '<div class="empty-state-small">위에서 단어를 클릭하거나 "모든 원문 보기"를 눌러주세요.</div>';
+    return;
+  }
+  if (matched.length === 0) {
+    originalListEl.innerHTML = '<div class="empty-state-small">조건에 맞는 답변이 없습니다.</div>';
+    return;
+  }
+  originalListEl.innerHTML = '';
+  matched.forEach((text) => {
+    const card = document.createElement('div');
+    card.className = 'original-card';
+    card.textContent = text;
+    originalListEl.appendChild(card);
+  });
+}
+
 const CLOUD_COLORS = ['#ffb84d', '#4dd0e1', '#f2f0e9', '#ff9b6b', '#8fd694'];
 
 function scheduleCloudRedraw() {
@@ -182,6 +338,9 @@ function scheduleCloudRedraw() {
 
 function redrawWordCloud() {
   if (currentView !== 'cloud') return;
+
+  renderNounFreqTable(extractNouns(answerTexts));
+  renderOriginalTexts();
 
   const list = buildFrequencyList(answerTexts);
 

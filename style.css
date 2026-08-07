@@ -586,6 +586,133 @@ input[type="range"] {
   .wordcloud-wrap { height: 380px; }
 }
 
+/* --- board: noun frequency table --- */
+.noun-freq-wrap {
+  margin-top: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 22px 24px;
+}
+
+.noun-freq-title {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.noun-freq-hint {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.noun-freq-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 8px;
+  margin: 0 -8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.noun-freq-row:hover { background: rgba(255,184,77,0.07); }
+.noun-freq-row.selected { background: rgba(255,184,77,0.14); }
+.noun-freq-row.selected .noun-freq-word { color: var(--accent); font-weight: 600; }
+
+.noun-freq-rank {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  width: 18px;
+  flex-shrink: 0;
+}
+
+.noun-freq-word {
+  font-size: 14px;
+  color: var(--text);
+  min-width: 88px;
+  max-width: 160px;
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.noun-freq-bar-wrap {
+  flex: 1;
+  height: 8px;
+  background: var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.noun-freq-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-dim), var(--accent));
+  border-radius: 4px;
+}
+
+.noun-freq-count {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  width: 30px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* --- board: original answer viewer (filtered by selected words) --- */
+.original-wrap {
+  margin-top: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 22px 24px;
+}
+
+.original-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.original-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.original-actions .btn-small.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.original-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.original-card {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 14px;
+  line-height: 1.55;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+
 /* --- password gate --- */
 .auth-gate {
   position: fixed;

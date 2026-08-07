@@ -32,9 +32,12 @@
   <div id="setupBanner"></div>
 
   <div class="board-header">
-    <div>
+    <div class="board-header-main">
       <div class="eyebrow"><span class="dot-live"></span><span id="questionLabel">실시간 집계 중</span></div>
-      <h1 class="board-question" id="questionText">질문을 불러오는 중…</h1>
+      <div class="question-card question-card-board">
+        <div class="question-card-number" id="questionNumber">–</div>
+        <p class="question-card-text" id="questionText">질문을 불러오는 중…</p>
+      </div>
     </div>
     <div class="counter">
       <span class="num" id="answerCount">0</span>
@@ -54,6 +57,31 @@
   <div class="wordcloud-wrap" id="wordcloudWrap">
     <canvas id="wordcloudCanvas"></canvas>
     <div class="empty-state" id="cloudEmptyState">아직 도착한 답변이 없습니다.</div>
+  </div>
+
+  <div class="noun-freq-wrap" id="nounFreqWrap">
+    <div class="noun-freq-title">
+      명사 기준 단어 빈도 (상위 15개)
+      <span class="noun-freq-hint">· 조사를 제거한 간단한 추정 방식입니다</span>
+    </div>
+    <div class="noun-freq-list" id="nounFreqList">
+      <div class="empty-state-small">아직 집계할 답변이 없습니다.</div>
+    </div>
+  </div>
+
+  <div class="original-wrap" id="originalWrap">
+    <div class="original-header">
+      <div class="noun-freq-title" style="margin-bottom:0;">
+        원문 보기 <span class="noun-freq-hint" id="originalCountLabel">· 단어를 클릭해서 필터링하세요 (여러 개 선택 시 OR 조건)</span>
+      </div>
+      <div class="original-actions">
+        <button class="btn-small" type="button" id="clearSelectionBtn">선택 초기화</button>
+        <button class="btn-small" type="button" id="showAllOriginalsBtn">모든 원문 보기</button>
+      </div>
+    </div>
+    <div class="original-list" id="originalList">
+      <div class="empty-state-small">위에서 단어를 클릭하거나 "모든 원문 보기"를 눌러주세요.</div>
+    </div>
   </div>
 
   <div class="board-grid" id="boardGrid" style="display:none;">
