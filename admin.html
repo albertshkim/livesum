@@ -39,15 +39,17 @@
   <label class="section-label">질문 일괄 등록</label>
   <div class="format-hint">
     한 줄에 <b>번호 + 마침표 + 질문</b> 형식으로 여러 개를 한꺼번에 붙여넣으세요.<br>
+    다음 번호가 나오기 전까지 줄바꿈해서 이어 쓰면 <b>줄바꿈·들여쓰기가 그대로 유지</b>되고,
+    <b>* </b> 또는 <b>- </b>로 시작하는 줄은 <b>불릿 목록</b>으로, <b>**텍스트**</b>로 감싼 부분은
+    <b>**볼드**</b>로 표시됩니다.<br>
     예)<br>
-    1. 직업은 무엇인가요?<br>
-    2. 연령대는 어떻게 되나요?<br>
-    3. 오늘 세션에서 가장 기억에 남는 점은?<br>
-    같은 번호를 다시 등록하면 그 질문 내용이 새 내용으로 교체됩니다.<br>
-    다음 번호가 나오기 전까지 줄바꿈해서 이어 쓰면, 그 <b>줄바꿈이 그대로 유지된 채</b>
-    참가자 화면·집계 보드에 표시됩니다.
+    5. **중요**: 최근 회사 생활을 돌아보며 느낀 점을 자유롭게 적어주세요.<br>
+    &nbsp;&nbsp;* **회사 생활**이나 커리어 성장에 대한 생각<br>
+    &nbsp;&nbsp;* 현재 업무를 하면서 느끼는 보람이나 고민<br>
+    6. 다음 질문...<br>
+    같은 번호를 다시 등록하면 그 질문 내용이 새 내용으로 교체됩니다.
   </div>
-  <textarea id="bulkQuestionInput" class="textarea-lg" placeholder="1. 직업은 무엇인가요?&#10;2. 연령대는 어떻게 되나요?&#10;3. 오늘 세션에서 가장 기억에 남는 점은?"></textarea>
+  <textarea id="bulkQuestionInput" class="textarea-lg" placeholder="5. **중요**: 최근 회사 생활을 돌아보며 느낀 점을 자유롭게 적어주세요.&#10;  * **회사 생활**이나 커리어 성장에 대한 생각&#10;  * 현재 업무를 하면서 느끼는 보람이나 고민&#10;6. 다음 질문..."></textarea>
 
   <div class="form-footer">
     <span class="char-count" id="parsedPreview">입력한 질문 0개 인식됨</span>
@@ -106,6 +108,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="firebase-config.js"></script>
+<script src="question-format.js"></script>
 <script src="admin.js"></script>
 
 </body>

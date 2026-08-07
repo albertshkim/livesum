@@ -16,6 +16,9 @@ const countEl = document.getElementById('answerCount');
 const setupBanner = document.getElementById('setupBanner');
 const copyAllBtn = document.getElementById('copyAllBtn');
 const copyStatusEl = document.getElementById('copyStatus');
+const saveResultBtn = document.getElementById('saveResultBtn');
+const savedListEl = document.getElementById('savedList');
+const savedCountLabel = document.getElementById('savedCountLabel');
 const viewCloudBtn = document.getElementById('viewCloudBtn');
 const viewCardBtn = document.getElementById('viewCardBtn');
 const wordcloudWrap = document.getElementById('wordcloudWrap');
@@ -37,6 +40,7 @@ let answersRef = null;
 let count = 0;
 let lastCard = null;
 let answerTexts = []; // 복사/워드클라우드용으로 답변 원문을 순서대로 보관
+let currentQuestionText = ''; // "결과 저장" 시 서식(줄바꿈 등)을 유지하기 위한 원본 질문 텍스트
 let currentView = 'cloud'; // 'cloud' | 'card'
 let redrawTimer = null;
 let latestNounList = [];
@@ -57,6 +61,7 @@ if (typeof firebaseConfig !== 'undefined' && firebaseConfig.apiKey !== 'YOUR_API
     '<code>firebase-config.js</code> 파일을 열어 본인의 Firebase 프로젝트 값으로 채워주세요. ' +
     '(README.md 참고)</div>';
   copyAllBtn.disabled = true;
+  saveResultBtn.disabled = true;
 }
 
 if (dbReady) {
@@ -69,6 +74,11 @@ if (dbReady) {
   db.ref('session/questionFontSize').on('value', (snap) => {
     const px = snap.val();
     questionEl.style.fontSize = px ? px + 'px' : '';
+  });
+
+  // 저장된 결과 목록 (질문+답변 스냅샷) 실시간 구독
+  db.ref('savedResults').on('value', (snap) => {
+    renderSavedList(snap.val() || {});
   });
 } else {
   questionEl.textContent = '연결 대기 중…';
@@ -92,6 +102,7 @@ function switchToQuestion(num) {
   if (!num) {
     questionLabelEl.textContent = '대기 중';
     questionNumberEl.textContent = '–';
+    currentQuestionText = '';
     questionEl.textContent = '아직 진행 중인 질문이 없습니다.';
     return;
   }
@@ -102,7 +113,8 @@ function switchToQuestion(num) {
   questionRef = db.ref('questions/' + num + '/text');
   questionRef.on('value', (snap) => {
     const q = snap.val();
-    questionEl.textContent = q && q.trim() ? q : '(질문 내용 없음)';
+    currentQuestionText = q && q.trim() ? q : '(질문 내용 없음)';
+    questionEl.innerHTML = renderQuestionMarkup(currentQuestionText);
   });
 
   answersRef = db.ref('answers/' + num);
@@ -428,6 +440,138 @@ function fallbackCopy(text, done, fail) {
 function showCopyStatus(msg, isError) {
   copyStatusEl.textContent = msg;
   copyStatusEl.className = 'status-msg' + (isError ? ' error' : '');
+}
+
+// ------------------------------------------------------------
+// 현재 질문 + 현재까지의 답변을 하나의 스냅샷으로 저장
+// (answers/{번호}는 계속 실시간으로 쌓이지만, 이 저장 목록은
+//  "그 순간의 결과"를 별도로 보존해두는 용도입니다. 전체 초기화를
+//  하기 전에 기록을 남기고 싶을 때 특히 유용합니다.)
+// ------------------------------------------------------------
+saveResultBtn.addEventListener('click', () => {
+  if (!dbReady) {
+    showCopyStatus('Firebase 설정이 완료되지 않았습니다.', true);
+    return;
+  }
+  if (!activeNumber) {
+    showCopyStatus('저장할 진행 중인 질문이 없습니다.', true);
+    return;
+  }
+  if (answerTexts.length === 0) {
+    showCopyStatus('저장할 답변이 아직 없습니다.', true);
+    return;
+  }
+
+  db.ref('savedResults').push({
+    questionNumber: activeNumber,
+    questionText: currentQuestionText,
+    answers: answerTexts.slice(),
+    answerCount: answerTexts.length,
+    savedAt: firebase.database.ServerValue.TIMESTAMP
+  }).then(() => {
+    showCopyStatus('현재 결과가 저장되었습니다 ✓', false);
+  }).catch((err) => {
+    showCopyStatus('저장 실패: ' + err.message, true);
+  });
+});
+
+function renderSavedList(dataObj) {
+  const entries = Object.keys(dataObj).map((key) => {
+    const v = dataObj[key] || {};
+    return {
+      id: key,
+      questionNumber: v.questionNumber,
+      questionText: v.questionText,
+      answers: v.answers || [],
+      answerCount: v.answerCount != null ? v.answerCount : (v.answers ? v.answers.length : 0),
+      savedAt: v.savedAt
+    };
+  });
+
+  entries.sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
+
+  savedCountLabel.textContent = entries.length + '개 저장됨';
+
+  if (entries.length === 0) {
+    savedListEl.innerHTML = '<div class="empty-state-small">아직 저장된 결과가 없습니다. 위의 "결과 저장" 버튼을 눌러보세요.</div>';
+    return;
+  }
+
+  savedListEl.innerHTML = '';
+  entries.forEach((entry) => {
+    const item = document.createElement('div');
+    item.className = 'saved-item';
+
+    const main = document.createElement('div');
+    main.className = 'saved-item-main';
+
+    const qDiv = document.createElement('div');
+    qDiv.className = 'saved-item-question';
+    qDiv.textContent = (entry.questionNumber ? entry.questionNumber + '번 · ' : '') + (entry.questionText || '(질문 없음)');
+
+    const metaDiv = document.createElement('div');
+    metaDiv.className = 'saved-item-meta';
+    metaDiv.textContent = formatDateTime(entry.savedAt) + ' · 답변 ' + entry.answerCount + '개';
+
+    main.appendChild(qDiv);
+    main.appendChild(metaDiv);
+
+    const actions = document.createElement('div');
+    actions.className = 'saved-item-actions';
+
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'icon-btn';
+    copyBtn.title = '클립보드에 복사';
+    copyBtn.type = 'button';
+    copyBtn.textContent = '📋';
+    copyBtn.addEventListener('click', () => copySavedEntry(entry));
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'icon-btn danger';
+    delBtn.title = '삭제';
+    delBtn.type = 'button';
+    delBtn.textContent = '🗑️';
+    delBtn.addEventListener('click', () => deleteSavedEntry(entry.id));
+
+    actions.appendChild(copyBtn);
+    actions.appendChild(delBtn);
+
+    item.appendChild(main);
+    item.appendChild(actions);
+    savedListEl.appendChild(item);
+  });
+}
+
+function copySavedEntry(entry) {
+  const lines = [];
+  lines.push((entry.questionNumber ? entry.questionNumber + '번 질문: ' : '질문: ') + (entry.questionText || ''));
+  lines.push('');
+  entry.answers.forEach((a) => lines.push(a));
+  const text = lines.join('\n');
+
+  const done = () => showCopyStatus('저장된 결과가 복사되었습니다 ✓', false);
+  const fail = (err) => showCopyStatus('복사에 실패했습니다: ' + err, true);
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done, fail));
+  } else {
+    fallbackCopy(text, done, fail);
+  }
+}
+
+function deleteSavedEntry(id) {
+  if (!confirm('이 저장 항목을 삭제할까요? 되돌릴 수 없습니다.')) return;
+  db.ref('savedResults/' + id).remove().catch((err) => {
+    showCopyStatus('삭제 실패: ' + err.message, true);
+  });
+}
+
+function formatDateTime(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return d.toLocaleString('ko-KR', {
+    month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+  });
 }
 
 function formatTime(ts) {

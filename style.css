@@ -150,7 +150,6 @@ a { color: inherit; }
   line-height: 1.5;
   color: var(--text);
   padding-top: 3px;
-  white-space: pre-wrap;
 }
 
 /* board.html 헤더에서 쓰는 변형: 좌측 정렬, 카운터와 나란히 배치 */
@@ -429,7 +428,25 @@ textarea.textarea-lg:focus { border-color: var(--accent); }
   font-size: 15px;
   line-height: 1.5;
   word-break: break-word;
-  white-space: pre-wrap;
+}
+
+/* --- 질문 서식 변환기(question-format.js)가 생성하는 마크업 스타일 --- */
+.q-line {
+  margin: 2px 0;
+}
+
+.q-blank-line {
+  height: 0.65em;
+}
+
+.q-bullet-list {
+  margin: 6px 0 10px;
+  padding-left: 1.3em;
+  list-style: disc;
+}
+
+.q-bullet-list li {
+  margin: 3px 0;
 }
 
 .q-actions {
@@ -584,9 +601,84 @@ input[type="range"] {
   border: none;
 }
 
-@media (max-width: 560px) {
-  .wordcloud-wrap { height: 380px; }
+/* --- board: saved results archive --- */
+.saved-wrap {
+  margin-top: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 22px 24px;
 }
+
+.saved-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.saved-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.saved-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.saved-item-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.saved-item-question {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin-bottom: 6px;
+}
+
+.saved-item-meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.saved-item-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s, background 0.2s;
+  flex-shrink: 0;
+}
+.icon-btn:hover { border-color: var(--live); background: rgba(77,208,225,0.1); }
+.icon-btn.danger:hover { border-color: #ff6b6b; background: rgba(255,107,107,0.1); }
 
 /* --- board: noun frequency table --- */
 .noun-freq-wrap {
@@ -759,6 +851,10 @@ input[type="range"] {
   transition: border-color 0.2s;
 }
 .auth-input:focus { border-color: var(--accent); }
+
+@media (max-width: 560px) {
+  .wordcloud-wrap { height: 380px; }
+}
 
 @media (max-width: 560px) {
   .board-header { flex-direction: column; align-items: flex-start; }

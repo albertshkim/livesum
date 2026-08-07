@@ -57,21 +57,31 @@ function showStatus(el, msg, isError) {
 //    다음 번호 줄이 나오기 전까지 이어지는 줄은 같은 질문에 이어붙임
 // ------------------------------------------------------------
 function parseBulkQuestions(raw) {
-  const lines = raw.split('\n');
-  const result = {}; // { "1": "직업은 무엇인가요?", ... }
+  // 각 줄의 원본 서식(들여쓰기, 불릿 등)을 보존하기 위해 여기서는 trim하지 않습니다.
+  const rawLines = raw.split('\n').map((l) => l.replace(/\r$/, ''));
+  const result = {}; // { "1": "직업은 무엇인가요?\n* 세부 질문1\n* 세부 질문2", ... }
   let currentNum = null;
 
-  lines.forEach((rawLine) => {
-    const line = rawLine.trim();
-    if (!line) return;
-    const m = line.match(/^(\d+)\.\s*(.*)$/);
+  rawLines.forEach((rawLine) => {
+    const m = rawLine.trim().match(/^(\d+)\.\s*(.*)$/);
+
     if (m) {
       currentNum = m[1];
-      result[currentNum] = m[2].trim();
-    } else if (currentNum !== null) {
-      // 다음 번호가 나오기 전까지 이어지는 줄은 줄바꿈을 유지한 채 같은 질문에 붙임
-      result[currentNum] = (result[currentNum] + '\n' + line).trim();
+      result[currentNum] = m[2];
+      return;
     }
+
+    if (currentNum === null) return; // 첫 질문 번호가 나오기 전의 줄은 무시
+
+    // 다음 번호가 나오기 전까지 이어지는 줄: 들여쓰기·불릿(*, -) 등
+    // 원래 서식을 그대로 유지한 채 같은 질문에 줄바꿈으로 이어붙입니다.
+    result[currentNum] = (result[currentNum] || '') + '\n' + rawLine;
+  });
+
+  // 앞뒤에 남은 불필요한 빈 줄만 정리합니다 (질문 사이 구분용 빈 줄이
+  // 자동으로 여기서 제거됩니다). 문항 중간의 줄바꿈·들여쓰기는 그대로 유지됩니다.
+  Object.keys(result).forEach((num) => {
+    result[num] = result[num].replace(/^\n+/, '').replace(/\s+$/, '');
   });
 
   return result;
@@ -154,7 +164,7 @@ function renderQuestionList() {
 
     const text = document.createElement('div');
     text.className = 'q-text';
-    text.textContent = (q && q.text) || '(내용 없음)';
+    text.innerHTML = renderQuestionMarkup((q && q.text) || '(내용 없음)');
 
     const actions = document.createElement('div');
     actions.className = 'q-actions';

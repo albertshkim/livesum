@@ -63,7 +63,7 @@ function attachQuestionListener() {
   const ref = db.ref('questions/' + activeNumber + '/text');
   ref.on('value', (snap) => {
     const text = snap.val();
-    questionEl.textContent = text && text.trim() ? text : '질문을 불러오는 중…';
+    questionEl.innerHTML = renderQuestionMarkup(text && text.trim() ? text : '질문을 불러오는 중…');
   });
   questionListener = ref;
 }

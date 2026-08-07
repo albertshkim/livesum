@@ -42,10 +42,21 @@
     <div class="counter">
       <span class="num" id="answerCount">0</span>
       <span class="label">답변</span>
-      <div style="margin-top:12px;">
+      <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end;">
         <button class="copy-btn" id="copyAllBtn">답변 전체 복사</button>
+        <button class="copy-btn" id="saveResultBtn" style="border-color:var(--accent);color:var(--accent);">결과 저장</button>
       </div>
       <div class="status-msg" id="copyStatus" style="text-align:right;"></div>
+    </div>
+  </div>
+
+  <div class="saved-wrap" id="savedWrap">
+    <div class="saved-header">
+      <div class="noun-freq-title" style="margin-bottom:0;">저장된 결과 목록</div>
+      <span class="noun-freq-hint" id="savedCountLabel">0개 저장됨</span>
+    </div>
+    <div class="saved-list" id="savedList">
+      <div class="empty-state-small">아직 저장된 결과가 없습니다. 위의 "결과 저장" 버튼을 눌러보세요.</div>
     </div>
   </div>
 
@@ -95,6 +106,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="firebase-config.js"></script>
+<script src="question-format.js"></script>
 <script src="board.js"></script>
 
 </body>
