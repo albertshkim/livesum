@@ -69,7 +69,8 @@ function parseBulkQuestions(raw) {
       currentNum = m[1];
       result[currentNum] = m[2].trim();
     } else if (currentNum !== null) {
-      result[currentNum] = (result[currentNum] + ' ' + line).trim();
+      // 다음 번호가 나오기 전까지 이어지는 줄은 줄바꿈을 유지한 채 같은 질문에 붙임
+      result[currentNum] = (result[currentNum] + '\n' + line).trim();
     }
   });
 
