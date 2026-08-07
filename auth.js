@@ -7,7 +7,7 @@
 // 비밀번호를 바꾸려면 아래 SITE_PASSWORD 값만 수정하면 됩니다.
 // ------------------------------------------------------------
 (function () {
-  const SITE_PASSWORD = 'hello123';
+  const SITE_PASSWORD = 'hello1';
   const STORAGE_KEY = 'anonBoardAuthed';
 
   function unlock() {
