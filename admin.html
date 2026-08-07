@@ -10,6 +10,18 @@
 </head>
 <body>
 
+<div id="authGate" class="auth-gate">
+  <div class="auth-box">
+    <div class="brand" style="margin-bottom:20px;">ANON · BOARD</div>
+    <p class="auth-title">비밀번호를 입력하세요</p>
+    <form id="authForm">
+      <input type="password" id="authPasswordInput" class="auth-input" placeholder="비밀번호" autocomplete="off" />
+      <button type="submit" class="submit-btn" style="width:100%;margin-top:14px;">입장</button>
+    </form>
+    <div class="status-msg error" id="authError" style="text-align:center;margin-top:14px;"></div>
+  </div>
+</div>
+<script src="auth.js"></script>
 <div class="topbar">
   <div class="brand">ANON · BOARD / ADMIN</div>
   <a class="nav-link" href="board.html">집계 보드 보기 →</a>
