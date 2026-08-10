@@ -3,7 +3,7 @@
 // Firebase 콘솔 > 프로젝트 설정 > 일반 > 내 앱 > SDK 설정 및 구성
 // 에서 복사할 수 있습니다. (무료 Spark 요금제로 충분합니다)
 //
-// 자세한 설정 방법은 README.md 를 참고하세요.
+// 자세한 설정 방법은 README.md 를 참고하세요. (원본저장) 
 // ------------------------------------------------------------
 const firebaseConfig = {
   apiKey: "AIzaSyBvuY2KWvmJ7Ug0Ec8g9k_Df0mvK5oXnSk",
