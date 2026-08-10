@@ -409,9 +409,16 @@ copyAllBtn.addEventListener('click', () => {
     showCopyStatus('복사할 답변이 없습니다.', true);
     return;
   }
-  const joined = answerTexts.join('\n');
 
-  const done = () => showCopyStatus(answerTexts.length + '개 답변이 복사되었습니다 ✓', false);
+  const lines = [];
+  if (currentQuestionText) {
+    lines.push((activeNumber ? '[' + activeNumber + '번 질문] ' : '[질문] ') + currentQuestionText);
+    lines.push('');
+  }
+  answerTexts.forEach((t) => lines.push(t));
+  const joined = lines.join('\n');
+
+  const done = () => showCopyStatus(answerTexts.length + '개 답변이 질문과 함께 복사되었습니다 ✓', false);
   const fail = (err) => showCopyStatus('복사에 실패했습니다: ' + err, true);
 
   if (navigator.clipboard && navigator.clipboard.writeText) {
