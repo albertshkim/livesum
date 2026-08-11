@@ -1,0 +1,9 @@
+# 실제 비밀값이 들어있는 파일 - 깃허브에 올리지 않습니다.
+# (예시 파일인 firebase-config.example.js / auth-config.example.js는
+#  값이 없는 템플릿이라 안전하므로 그대로 커밋됩니다.)
+firebase-config.js
+auth-config.js
+
+# OS/에디터 잡파일
+.DS_Store
+Thumbs.db
