@@ -31,10 +31,15 @@ const originalListEl = document.getElementById('originalList');
 const originalCountLabel = document.getElementById('originalCountLabel');
 const clearSelectionBtn = document.getElementById('clearSelectionBtn');
 const showAllOriginalsBtn = document.getElementById('showAllOriginalsBtn');
+const replayBanner = document.getElementById('replayBanner');
+const replayBannerText = document.getElementById('replayBannerText');
+const exitReplayBtn = document.getElementById('exitReplayBtn');
 
 let dbReady = false;
 let db = null;
-let activeNumber = null;
+let activeNumber = null; // 현재 화면에 표시 중인 질문 번호 (실시간 모드에서는 라이브 번호, 재생 모드에서는 저장된 스냅샷의 번호)
+let liveActiveNumber = null; // Firebase가 실제로 지정한 라이브 질문 번호 (재생 모드 종료 시 이 번호로 복귀)
+let isReplaying = false; // 저장된 결과를 재생(미리보기) 중인지 여부
 let questionRef = null;
 let answersRef = null;
 let count = 0;
@@ -66,8 +71,11 @@ if (typeof firebaseConfig !== 'undefined' && firebaseConfig.apiKey !== 'YOUR_API
 
 if (dbReady) {
   db.ref('session/activeQuestionNumber').on('value', (snap) => {
-    activeNumber = snap.val();
-    switchToQuestion(activeNumber);
+    liveActiveNumber = snap.val();
+    if (!isReplaying) {
+      activeNumber = liveActiveNumber;
+      switchToQuestion(activeNumber);
+    }
   });
 
   // 관리자가 설정한 질문 글자 크기를 실시간 반영
@@ -85,6 +93,10 @@ if (dbReady) {
 }
 
 function switchToQuestion(num) {
+  // 재생 모드 배너가 떠있다면 숨깁니다 (실시간 화면으로 돌아왔으므로)
+  isReplaying = false;
+  replayBanner.style.display = 'none';
+
   // 이전 질문/답변 구독 해제
   if (questionRef) { questionRef.off(); questionRef = null; }
   if (answersRef) { answersRef.off(); answersRef = null; }
@@ -526,6 +538,13 @@ function renderSavedList(dataObj) {
     const actions = document.createElement('div');
     actions.className = 'saved-item-actions';
 
+    const replayBtn = document.createElement('button');
+    replayBtn.className = 'icon-btn';
+    replayBtn.title = '이 결과 재생 (현재 화면에 불러오기)';
+    replayBtn.type = 'button';
+    replayBtn.textContent = '▶';
+    replayBtn.addEventListener('click', () => enterReplay(entry));
+
     const copyBtn = document.createElement('button');
     copyBtn.className = 'icon-btn';
     copyBtn.title = '클립보드에 복사';
@@ -540,6 +559,7 @@ function renderSavedList(dataObj) {
     delBtn.textContent = '🗑️';
     delBtn.addEventListener('click', () => deleteSavedEntry(entry.id));
 
+    actions.appendChild(replayBtn);
     actions.appendChild(copyBtn);
     actions.appendChild(delBtn);
 
@@ -547,6 +567,71 @@ function renderSavedList(dataObj) {
     item.appendChild(actions);
     savedListEl.appendChild(item);
   });
+}
+
+// ------------------------------------------------------------
+// 저장된 결과 재생(미리보기): 실시간 Firebase 데이터를 건드리지 않고,
+// 화면(질문·워드클라우드·명사 빈도표·원문 보기·카드형)만 그 시점 스냅샷으로
+// 임시로 바꿔서 보여줍니다. "실시간으로 돌아가기"를 누르면 원래 라이브
+// 상태로 복귀합니다.
+// ------------------------------------------------------------
+function enterReplay(entry) {
+  // 라이브 구독을 잠시 멈춥니다 (재생 중엔 실시간 답변이 화면을 덮어쓰지 않도록)
+  if (questionRef) { questionRef.off(); questionRef = null; }
+  if (answersRef) { answersRef.off(); answersRef = null; }
+
+  isReplaying = true;
+  activeNumber = entry.questionNumber || null;
+  currentQuestionText = entry.questionText || '';
+
+  questionNumberEl.textContent = activeNumber || '–';
+  questionEl.innerHTML = renderQuestionMarkup(currentQuestionText || '(질문 없음)');
+  questionLabelEl.textContent = '저장된 결과 재생 중';
+
+  answerTexts = (entry.answers || []).slice();
+  count = answerTexts.length;
+  countEl.textContent = count;
+  selectedWords.clear();
+  showAllOriginals = false;
+
+  rebuildCardGrid();
+  scheduleCloudRedraw();
+
+  replayBannerText.textContent =
+    '저장된 결과를 보고 있습니다' +
+    (activeNumber ? ' (' + activeNumber + '번 · ' : ' (') +
+    formatDateTime(entry.savedAt) + ')';
+  replayBanner.style.display = 'flex';
+
+  showCopyStatus('저장된 결과를 불러왔습니다.', false);
+}
+
+exitReplayBtn.addEventListener('click', () => {
+  isReplaying = false;
+  replayBanner.style.display = 'none';
+  activeNumber = liveActiveNumber;
+  switchToQuestion(liveActiveNumber);
+});
+
+// 실시간 모드에서는 answersRef의 child_added 이벤트가 카드를 하나씩 추가하지만,
+// 재생 모드는 저장된 답변 배열을 한 번에 통째로 보여줘야 하므로 그리드를
+// 처음부터 다시 그립니다.
+function rebuildCardGrid() {
+  if (answerTexts.length === 0) {
+    gridEl.innerHTML = '<div class="empty-state">아직 도착한 답변이 없습니다.</div>';
+    lastCard = null;
+    return;
+  }
+  gridEl.innerHTML = '';
+  // 실시간 모드와 동일하게 최신 답변이 위로 오도록 배열을 뒤집어서 렌더링
+  const reversed = answerTexts.slice().reverse();
+  reversed.forEach((text, idx) => {
+    const card = document.createElement('div');
+    card.className = 'card' + (idx === 0 ? ' newest' : '');
+    card.innerHTML = escapeHtml(text) + '<span class="ts"></span>';
+    gridEl.appendChild(card);
+  });
+  lastCard = gridEl.firstChild;
 }
 
 function copySavedEntry(entry) {

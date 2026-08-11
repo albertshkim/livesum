@@ -601,6 +601,32 @@ input[type="range"] {
   border: none;
 }
 
+/* --- board: replay banner (저장된 결과 재생 모드) --- */
+.replay-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: rgba(255, 184, 77, 0.12);
+  border: 1px solid var(--accent-dim);
+  color: var(--accent);
+  border-radius: 10px;
+  padding: 10px 16px;
+  margin-bottom: 20px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+}
+
+.replay-banner .btn-small {
+  border-color: var(--accent);
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.replay-banner .btn-small:hover {
+  background: rgba(255, 184, 77, 0.15);
+}
+
 /* --- board: saved results archive --- */
 .saved-wrap {
   margin-top: 16px;
