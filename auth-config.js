@@ -7,4 +7,4 @@
 // 생성해서 처리하므로, 아래 값을 GitHub 저장소 Settings → Secrets and
 // variables → Actions 에도 SITE_PASSWORD 라는 이름으로 등록해두세요.
 // ------------------------------------------------------------
-//const SITE_PASSWORD = 'Kantar123';
+//const SITE_PASSWORD = 'ss';
