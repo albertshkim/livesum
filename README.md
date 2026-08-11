@@ -10,20 +10,51 @@
 | `index.html` / `ask.js` | 참가자가 질문을 보고 답변을 제출하는 화면 |
 | `board.html` / `board.js` | 답변이 들어오는 즉시 표시되는 실시간 집계 보드 (발표 화면 등에 띄워두는 용도) |
 | `admin.html` / `admin.js` | 질문 등록/변경, 답변 초기화 (암호 없이 바로 사용, 링크를 아는 사람만 접근한다고 가정) |
-| `firebase-config.js` | 본인의 Firebase 프로젝트 키를 채워 넣는 설정 파일 |
-| `question-format.js` | 질문 문장의 줄바꿈·들여쓰기·불릿(`*`, `-`)을 화면에 표시할 때 쓰는 공용 서식 변환기 |
-| `auth.js` | 세 화면(질문/보드/관리자) 공통 비밀번호 게이트 |
+| `firebase-config.js` ⚠️비공개 | 본인의 Firebase 프로젝트 키가 담긴 실제 설정 파일. **git에 올리지 않습니다** |
+| `firebase-config.example.js` | 위 파일의 값 없는 템플릿. 이건 git에 올려도 안전합니다 |
+| `auth-config.js` ⚠️비공개 | 실제 접속 비밀번호가 담긴 파일. **git에 올리지 않습니다** |
+| `auth-config.example.js` | 위 파일의 값 없는 템플릿. 이건 git에 올려도 안전합니다 |
+| `auth.js` | 세 화면(질문/보드/관리자) 공통 비밀번호 게이트 로직 (값은 auth-config.js에서 읽어옴) |
+| `question-format.js` | 질문 문장의 줄바꿈·들여쓰기·불릿(`*`, `-`)·볼드(`**`)를 화면에 표시할 때 쓰는 공용 서식 변환기 |
 | `style.css` | 공용 디자인 |
+| `.gitignore` | `firebase-config.js`, `auth-config.js`가 실수로도 커밋되지 않도록 막는 설정 |
+| `.github/workflows/deploy.yml` | GitHub Secrets 값으로 두 비공개 설정 파일을 자동 생성해 GitHub Pages에 배포하는 워크플로우 |
+
+## 비밀값을 저장소에 올리지 않고 배포하기
+
+`firebase-config.js`와 `auth-config.js` 두 파일에는 Firebase 키와 접속 비밀번호가
+그대로 들어있습니다. 이 저장소를 공개(public)로 올려서 코드를 공유하고 싶지만
+이 값들은 남들에게 보이지 않길 원하실 텐데, 이 프로젝트는 아래와 같은 구조로
+그걸 해결합니다.
+
+- 두 파일은 `.gitignore`에 등록되어 있어서, `git add .`를 해도 **자동으로 제외**됩니다.
+- 대신 값이 비어있는 템플릿(`firebase-config.example.js`, `auth-config.example.js`)만
+  저장소에 올라갑니다. 즉 저장소를 공개해도 실제 키·비밀번호는 보이지 않습니다.
+- 실제 배포는 `.github/workflows/deploy.yml`(GitHub Actions)이 담당합니다. 저장소의
+  **Secrets**(비공개 저장 공간)에 값을 등록해두면, `main` 브랜치에 푸시할 때마다
+  Actions가 그 값으로 두 파일을 자동으로 만들어서 GitHub Pages에 배포합니다.
+  저장소 자체(소스 코드)에는 값이 없지만, 배포된 사이트는 정상 작동합니다.
+
+> ⚠️ 참고: 이렇게 해도 **배포된 사이트 자체**는 브라우저가 값을 읽어야 동작하므로,
+> 사이트에 접속해서 개발자도구(F12)로 보면 값이 보입니다. 이 구조가 막아주는 건
+> "깃허브 저장소(소스 코드)를 공유했을 때 남들이 코드만 보고 내 키·비밀번호를
+> 가져가는 것"이지, 배포된 사이트 자체의 완전한 보안은 아닙니다. Firebase 값은
+> Firebase 자체 문서에서도 "완전한 비밀"로 취급하지 않는 값이라 큰 위험은
+> 아니지만, 원치 않으실 수 있어 이렇게 분리해두었습니다.
 
 ## 접속 비밀번호
 
 세 화면(`index.html`, `board.html`, `admin.html`) 모두 접속 시 비밀번호를 먼저
-물어봅니다. 기본값은 `Kantar123`이고, `auth.js` 파일 상단의 `SITE_PASSWORD` 값만
-바꾸면 됩니다. 한 번 맞으면 브라우저를 닫기 전까지(세션 동안)는 다시 묻지 않습니다.
+물어봅니다. 로컬에서 테스트할 땐 `auth-config.example.js`를 복사해서
+`auth-config.js`로 저장하고, 그 안의 `SITE_PASSWORD` 값을 원하는 비밀번호로
+바꾸면 됩니다. 실제 배포 시 사용할 비밀번호는 GitHub 저장소 Secrets에
+`SITE_PASSWORD`라는 이름으로 등록해두세요 (아래 5번 참고). 한 번 맞으면
+브라우저를 닫기 전까지(세션 동안)는 다시 묻지 않습니다.
 
-> ⚠️ 브라우저 코드에 비밀번호가 그대로 노출되므로 완전한 보안 장치는 아닙니다.
-> 마음만 먹으면 개발자도구로 우회할 수 있는 수준이라, 아주 민감한 용도라면
-> Firebase Authentication 등을 추가로 붙이는 것을 권장합니다.
+> ⚠️ 브라우저 코드로 값이 전달되는 방식 자체는 그대로라, 배포된 사이트에서는
+> 개발자도구로 우회할 수 있는 수준입니다. 아무나 못 들어오게 막는 가벼운 문
+> 정도로 생각해주세요. 아주 민감한 용도라면 Firebase Authentication 등을
+> 추가로 붙이는 것을 권장합니다.
 
 ## 왜 Firebase가 필요한가요?
 
@@ -43,9 +74,10 @@ GitHub Pages는 정적 파일만 제공하는 호스팅이라 브라우저에서
 5. "내 앱" 에서 **웹 앱(</>) 추가** 클릭 → 앱 닉네임 아무거나 입력 → 등록
 6. 화면에 나오는 `firebaseConfig` 객체를 통째로 복사
 
-## 2. 이 프로젝트에 설정 붙여넣기
+## 2. 이 프로젝트에 설정 붙여넣기 (로컬 테스트용)
 
-`firebase-config.js` 파일을 열어 복사한 값으로 교체하세요:
+`firebase-config.example.js` 파일을 복사해서 `firebase-config.js`라는 이름으로
+저장한 뒤, 복사한 값으로 채우세요:
 
 ```js
 const firebaseConfig = {
@@ -58,6 +90,10 @@ const firebaseConfig = {
   appId: "..."
 };
 ```
+
+`firebase-config.js`는 `.gitignore`에 등록되어 있어서 커밋해도 자동으로
+제외되니, 실수로 올라갈까 걱정하지 않아도 됩니다. **실제 배포용 값은 5번의
+GitHub Secrets에 별도로 등록**합니다.
 
 > ⚠️ `admin.html`은 암호 없이 누구나 질문 등록/삭제/전체 초기화를 할 수 있습니다.
 > 이 파일의 링크(`.../admin.html`)는 참가자에게 공유하지 말고 진행자만 알고 있도록
@@ -136,12 +172,49 @@ Firebase 콘솔 → Realtime Database → **규칙** 탭에서 아래처럼 설�
 > 질문을 등록·삭제하거나 답변을 초기화할 수 있습니다. 참가자에게는 `index.html`
 > 링크만 공유하고, `admin.html`은 진행자만 열어보세요.
 
-## 5. GitHub Pages로 배포하기
+## 5. GitHub Pages로 배포하기 (GitHub Actions + Secrets 방식)
 
-1. 이 폴더 전체를 GitHub 저장소에 push
-2. 저장소 **Settings → Pages** 이동
-3. Source를 **Deploy from a branch**로 설정, 브랜치는 `main` (또는 사용 중인 브랜치), 폴더는 `/ (root)`
-4. 몇 분 후 `https://<사용자명>.github.io/<저장소명>/` 로 접속 가능
+무료 개인 계정에서 GitHub Pages는 **공개(public) 저장소**에서만 동작합니다.
+그래서 저장소 자체를 비공개로 돌리는 대신, 비밀값만 저장소 밖의 안전한
+공간(Secrets)에 보관하고 배포 시점에 자동으로 끼워 넣는 방식을 씁니다.
+
+**5-1. 저장소에 코드 올리기**
+
+`firebase-config.js`와 `auth-config.js`(실제 값이 든 두 파일)는 `.gitignore`
+덕분에 자동으로 제외됩니다. 나머지 파일을 그대로 GitHub 저장소에 push하세요.
+(저장소는 public이어도 괜찮습니다 — 두 비공개 파일이 안 올라가니까요.)
+
+**5-2. 저장소에 Secrets 등록하기**
+
+저장소 페이지 → **Settings → Secrets and variables → Actions** →
+**New repository secret** 을 눌러서 아래 8개를 하나씩 등록하세요.
+(이름은 정확히 아래와 똑같이, 값은 본인의 Firebase 프로젝트 값과 원하는
+비밀번호로)
+
+| Secret 이름 | 값 |
+|---|---|
+| `FIREBASE_API_KEY` | firebase-config.js의 `apiKey` |
+| `FIREBASE_AUTH_DOMAIN` | firebase-config.js의 `authDomain` |
+| `FIREBASE_DATABASE_URL` | firebase-config.js의 `databaseURL` |
+| `FIREBASE_PROJECT_ID` | firebase-config.js의 `projectId` |
+| `FIREBASE_STORAGE_BUCKET` | firebase-config.js의 `storageBucket` |
+| `FIREBASE_MESSAGING_SENDER_ID` | firebase-config.js의 `messagingSenderId` |
+| `FIREBASE_APP_ID` | firebase-config.js의 `appId` |
+| `SITE_PASSWORD` | 세 화면 접속 비밀번호 |
+
+**5-3. Pages 소스를 GitHub Actions로 설정**
+
+저장소 **Settings → Pages** 이동 → **Source**를 **GitHub Actions**로 선택합니다.
+(기존처럼 "Deploy from a branch"가 아닙니다 — 이 부분이 이전 안내와 달라진 점입니다.)
+
+**5-4. 배포 확인**
+
+`main` 브랜치에 커밋을 push하면 저장소 상단 **Actions** 탭에서 워크플로우가
+자동 실행됩니다. 초록색 체크가 뜨면 배포 완료이고, `https://<사용자명>.github.io/<저장소명>/`
+로 접속하면 정상 작동하는 사이트를 볼 수 있습니다.
+
+설정을 바꾸고 싶을 때(예: 비밀번호 변경)도 코드를 고칠 필요 없이, Secrets
+값만 바꾸고 **Actions 탭 → 워크플로우 → Run workflow**로 재배포하면 됩니다.
 
 ## 6. 사용 방법
 
