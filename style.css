@@ -318,7 +318,7 @@ button.submit-btn:disabled {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 10px;
-  padding: 18px 40px 18px 18px;
+  padding: 18px;
   font-size: 15px;
   line-height: 1.55;
   word-break: break-word;
@@ -336,39 +336,42 @@ button.submit-btn:disabled {
   border-radius: 10px 0 0 10px;
 }
 
+.card .ts {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
 .card-delete-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 22px;
-  height: 22px;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
   border-radius: 50%;
   border: 1px solid var(--line);
-  background: var(--surface);
+  background: transparent;
   color: var(--text-muted);
-  font-size: 11px;
+  font-size: 9px;
   line-height: 1;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: border-color 0.2s, color 0.2s, background 0.2s;
+  opacity: 0.55;
+  transition: opacity 0.2s, border-color 0.2s, color 0.2s, background 0.2s;
 }
 .card-delete-btn:hover {
+  opacity: 1;
   border-color: #ff6b6b;
   color: #ff6b6b;
   background: rgba(255, 107, 107, 0.1);
 }
 
 .card.newest::before { background: var(--accent); }
-
-.card .ts {
-  display: block;
-  margin-top: 12px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-muted);
-}
 
 @keyframes drop-in {
   from { opacity: 0; transform: translateY(10px) scale(0.98); }

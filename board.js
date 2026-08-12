@@ -158,9 +158,10 @@ function switchToQuestion(num) {
     card.className = 'card newest';
     card.dataset.answerId = answerId;
     card.innerHTML =
-      '<button class="card-delete-btn" type="button" title="이 답변 삭제">✕</button>' +
       escapeHtml(val.text) +
-      '<span class="ts">' + formatTime(val.ts) + '</span>';
+      '<span class="ts">' + formatTime(val.ts) +
+        '<button class="card-delete-btn" type="button" title="이 답변 삭제">✕</button>' +
+      '</span>';
     card.querySelector('.card-delete-btn').addEventListener('click', (e) => {
       e.stopPropagation();
       deleteAnswer(num, answerId);
@@ -253,27 +254,35 @@ function splitWords(text) {
     .filter(Boolean);
 }
 
-function tokenize(text) {
-  return splitWords(text).filter((w) => w.length > 1 && !STOPWORDS.has(w));
-}
-
-function buildFrequencyList(texts) {
+// ------------------------------------------------------------
+// 단어 집계: 워드클라우드와 명사 빈도표가 이 함수 하나를 함께 씁니다.
+// 그래야 한쪽에서 단어를 제외하면 둘 다 즉시 반영됩니다.
+// (완전한 형태소 분석기 없이, 흔히 쓰이는 조사를 단어 끝에서 제거하는
+// 규칙 기반 방식입니다. 100% 정확하지는 않지만 실시간 집계 보조 지표로는
+// 충분히 쓸만합니다.)
+// ------------------------------------------------------------
+function computeWordFrequencies(texts) {
   const freq = {};
   texts.forEach((text) => {
-    tokenize(text).forEach((word) => {
+    splitWords(text).forEach((rawWord) => {
+      const isKorean = /[가-힣]/.test(rawWord);
+      const word = isKorean ? stripJosa(rawWord) : rawWord.toLowerCase();
+      if (word.length < 2 || STOPWORDS.has(word)) return;
       freq[word] = (freq[word] || 0) + 1;
     });
   });
   return Object.keys(freq)
+    .filter((word) => !excludedWords.has(word)) // 제외 처리한 단어는 순위 계산에서 아예 뺌
     .map((word) => [word, freq[word]])
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 100); // 상단 100개 단어만 표시 (가독성)
+    .sort((a, b) => b[1] - a[1]);
+}
+
+function buildFrequencyList(texts) {
+  return computeWordFrequencies(texts).slice(0, 100); // 워드클라우드는 상단 100개까지 (가독성)
 }
 
 // ------------------------------------------------------------
-// 명사 추정: 완전한 형태소 분석기 없이, 흔히 쓰이는 조사(은/는/이/가/을/를 등)를
-// 단어 끝에서 제거하는 규칙 기반 방식입니다. 100% 정확하지는 않지만
-// 실시간 워드클라우드 보조 지표로는 충분히 쓸만합니다.
+// 명사 추정 목록 (상위 15개) - 워드클라우드와 동일한 집계에서 상위 15개만 사용
 // ------------------------------------------------------------
 
 // 긴 조사부터 먼저 매칭되도록 길이 내림차순으로 정렬해서 사용
@@ -302,20 +311,7 @@ function stripJosa(word) {
 }
 
 function extractNouns(texts) {
-  const freq = {};
-  texts.forEach((text) => {
-    splitWords(text).forEach((rawWord) => {
-      const isKorean = /[가-힣]/.test(rawWord);
-      const word = isKorean ? stripJosa(rawWord) : rawWord.toLowerCase();
-      if (word.length < 2 || STOPWORDS.has(word)) return;
-      freq[word] = (freq[word] || 0) + 1;
-    });
-  });
-  return Object.keys(freq)
-    .filter((word) => !excludedWords.has(word)) // 제외 처리한 단어는 순위 계산에서 아예 뺌 (다음 순위 단어가 그 자리를 채움)
-    .map((word) => [word, freq[word]])
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 15);
+  return computeWordFrequencies(texts).slice(0, 15);
 }
 
 function renderNounFreqTable(list) {
@@ -366,13 +362,12 @@ function renderNounFreqTable(list) {
 function excludeWord(word) {
   excludedWords.add(word);
   selectedWords.delete(word); // 제외하면 선택도 함께 해제
-  renderNounFreqTable(extractNouns(answerTexts));
-  renderOriginalTexts();
+  redrawWordCloud(); // 명사 빈도표 + 원문 보기 + 워드클라우드 캔버스까지 한 번에 갱신
 }
 
 function restoreWord(word) {
   excludedWords.delete(word);
-  renderNounFreqTable(extractNouns(answerTexts));
+  redrawWordCloud();
 }
 
 function renderExcludedWordsChips() {
@@ -395,7 +390,7 @@ function renderExcludedWordsChips() {
 
 restoreAllExcludedBtn.addEventListener('click', () => {
   excludedWords.clear();
-  renderNounFreqTable(extractNouns(answerTexts));
+  redrawWordCloud();
 });
 
 // ------------------------------------------------------------
