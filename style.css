@@ -706,6 +706,16 @@ input[type="range"] {
 .icon-btn:hover { border-color: var(--live); background: rgba(77,208,225,0.1); }
 .icon-btn.danger:hover { border-color: #ff6b6b; background: rgba(255,107,107,0.1); }
 
+/* 재생(▶) 아이콘은 기본 상태에서도 눈에 띄도록 강조 색상을 사용합니다 */
+.icon-btn.play {
+  color: var(--accent);
+  border-color: var(--accent-dim);
+}
+.icon-btn.play:hover {
+  border-color: var(--accent);
+  background: rgba(255, 184, 77, 0.14);
+}
+
 /* --- board: noun frequency table --- */
 .noun-freq-wrap {
   margin-top: 16px;

@@ -539,10 +539,10 @@ function renderSavedList(dataObj) {
     actions.className = 'saved-item-actions';
 
     const replayBtn = document.createElement('button');
-    replayBtn.className = 'icon-btn';
+    replayBtn.className = 'icon-btn play';
     replayBtn.title = '이 결과 재생 (현재 화면에 불러오기)';
     replayBtn.type = 'button';
-    replayBtn.textContent = '▶';
+    replayBtn.textContent = '\u25B6\uFE0E';
     replayBtn.addEventListener('click', () => enterReplay(entry));
 
     const copyBtn = document.createElement('button');
