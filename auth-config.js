@@ -5,6 +5,12 @@
 //
 // 배포는 GitHub Actions가 저장소의 Secrets 값으로 이 파일을 자동
 // 생성해서 처리하므로, 아래 값을 GitHub 저장소 Settings → Secrets and
-// variables → Actions 에도 SITE_PASSWORD 라는 이름으로 등록해두세요.
+// variables → Actions 에도 각각 SITE_PASSWORD, ADMIN_PASSWORD 라는
+// 이름으로 등록해두세요.
 // ------------------------------------------------------------
+
+// index.html(참가자 화면), board.html(집계 보드)에서 쓰는 비밀번호
 const SITE_PASSWORD = 'Kantar123';
+
+// admin.html(관리자 화면) 전용 비밀번호 - 위와 다르게 설정하세요
+const ADMIN_PASSWORD = 'Admin-Kantar456';

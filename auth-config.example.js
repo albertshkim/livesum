@@ -8,4 +8,9 @@
 // 실제 배포(GitHub Pages)는 GitHub Actions가 저장소 Secrets에서 값을
 // 가져와 auth-config.js를 자동으로 만들어주므로 별도 커밋이 필요 없습니다.
 // ------------------------------------------------------------
+
+// index.html(참가자 화면), board.html(집계 보드)에서 쓰는 비밀번호
 const SITE_PASSWORD = '원하는-비밀번호로-변경';
+
+// admin.html(관리자 화면) 전용 비밀번호 - 위와 다르게 설정하세요
+const ADMIN_PASSWORD = '관리자-전용-비밀번호로-변경';
