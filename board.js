@@ -19,6 +19,7 @@ const copyStatusEl = document.getElementById('copyStatus');
 const saveResultBtn = document.getElementById('saveResultBtn');
 const savedListEl = document.getElementById('savedList');
 const savedCountLabel = document.getElementById('savedCountLabel');
+const savedSortSelect = document.getElementById('savedSortSelect');
 const viewCloudBtn = document.getElementById('viewCloudBtn');
 const viewCardBtn = document.getElementById('viewCardBtn');
 const wordcloudWrap = document.getElementById('wordcloudWrap');
@@ -596,9 +597,45 @@ saveResultBtn.addEventListener('click', () => {
   });
 });
 
+let latestSavedDataObj = {}; // 정렬 방식을 바꿀 때 Firebase를 다시 안 읽고 재정렬만 하기 위해 보관
+
+function sortSavedEntries(entries, sortMode) {
+  const sorted = entries.slice();
+  switch (sortMode) {
+    case 'savedAtAsc':
+      sorted.sort((a, b) => (a.savedAt || 0) - (b.savedAt || 0));
+      break;
+    case 'questionNumber':
+      sorted.sort((a, b) => {
+        const an = Number(a.questionNumber);
+        const bn = Number(b.questionNumber);
+        if (isNaN(an) && isNaN(bn)) return 0;
+        if (isNaN(an)) return 1;
+        if (isNaN(bn)) return -1;
+        return an - bn;
+      });
+      break;
+    case 'questionText':
+      sorted.sort((a, b) =>
+        (a.questionText || '').localeCompare((b.questionText || ''), 'ko'));
+      break;
+    case 'savedAtDesc':
+    default:
+      sorted.sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
+      break;
+  }
+  return sorted;
+}
+
+savedSortSelect.addEventListener('change', () => {
+  renderSavedList(latestSavedDataObj);
+});
+
 function renderSavedList(dataObj) {
-  const entries = Object.keys(dataObj).map((key) => {
-    const v = dataObj[key] || {};
+  latestSavedDataObj = dataObj || {};
+
+  const rawEntries = Object.keys(latestSavedDataObj).map((key) => {
+    const v = latestSavedDataObj[key] || {};
     return {
       id: key,
       questionNumber: v.questionNumber,
@@ -609,7 +646,7 @@ function renderSavedList(dataObj) {
     };
   });
 
-  entries.sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
+  const entries = sortSavedEntries(rawEntries, savedSortSelect.value);
 
   savedCountLabel.textContent = entries.length + '개 저장됨';
 
