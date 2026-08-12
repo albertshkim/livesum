@@ -34,6 +34,8 @@ const showAllOriginalsBtn = document.getElementById('showAllOriginalsBtn');
 const replayBanner = document.getElementById('replayBanner');
 const replayBannerText = document.getElementById('replayBannerText');
 const exitReplayBtn = document.getElementById('exitReplayBtn');
+const questionRecapNumberEl = document.getElementById('questionRecapNumber');
+const questionRecapTextEl = document.getElementById('questionRecapText');
 
 let dbReady = false;
 let db = null;
@@ -116,6 +118,7 @@ function switchToQuestion(num) {
     questionNumberEl.textContent = '–';
     currentQuestionText = '';
     questionEl.textContent = '아직 진행 중인 질문이 없습니다.';
+    updateQuestionRecap(null, '');
     return;
   }
 
@@ -127,6 +130,7 @@ function switchToQuestion(num) {
     const q = snap.val();
     currentQuestionText = q && q.trim() ? q : '(질문 내용 없음)';
     questionEl.innerHTML = renderQuestionMarkup(currentQuestionText);
+    updateQuestionRecap(num, currentQuestionText);
   });
 
   answersRef = db.ref('answers/' + num);
@@ -587,6 +591,7 @@ function enterReplay(entry) {
   questionNumberEl.textContent = activeNumber || '–';
   questionEl.innerHTML = renderQuestionMarkup(currentQuestionText || '(질문 없음)');
   questionLabelEl.textContent = '저장된 결과 재생 중';
+  updateQuestionRecap(activeNumber, currentQuestionText);
 
   answerTexts = (entry.answers || []).slice();
   count = answerTexts.length;
@@ -664,6 +669,15 @@ function formatDateTime(ts) {
   return d.toLocaleString('ko-KR', {
     month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
   });
+}
+
+// 워드클라우드/카드형 영역 바로 위, 스크롤해도 화면에 붙어있는(sticky) 질문
+// 요약 바를 갱신합니다. 질문이 많아 스크롤이 길어져도 지금 보고 있는 답변이
+// 어느 질문에 대한 것인지 계속 확인할 수 있도록 하는 용도입니다.
+function updateQuestionRecap(num, text) {
+  questionRecapNumberEl.textContent = num || '–';
+  const plain = (text || '질문을 불러오는 중…').replace(/\s+/g, ' ').trim();
+  questionRecapTextEl.textContent = (num ? num + '번 · ' : '') + plain;
 }
 
 function formatTime(ts) {
