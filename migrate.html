@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>1회용 마이그레이션 도구</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="wrap">
+
+  <div id="setupBanner"></div>
+
+  <div class="eyebrow"><span class="dot-live"></span>1회용 도구</div>
+  <h1 class="question-text" style="font-size:22px;border-left-color:var(--live);">
+    기존 데이터를 projects/project1 로 옮기기
+  </h1>
+
+  <p class="hint" style="margin-top:0;">
+    프로젝트 네임스페이스 구조를 도입하기 전, 저장소 루트(<code>questions</code>,
+    <code>session</code>, <code>answers</code>, <code>savedResults</code>)에 있던
+    기존 데이터를 <code>projects/project1/...</code> 아래로 그대로 복사합니다.
+    <b>딱 한 번만 실행하면 됩니다.</b> 실행 후에는 이 페이지를 다시 열지 않아도
+    되고, 원하면 저장소에서 이 파일(<code>migrate.html</code>)을 지워도 됩니다.
+  </p>
+
+  <button class="submit-btn" id="migrateBtn">마이그레이션 실행</button>
+  <div class="status-msg" id="statusMsg" style="margin-top:16px;"></div>
+
+  <div id="detail" style="margin-top:24px;font-family:var(--font-mono);font-size:12.5px;color:var(--text-muted);white-space:pre-wrap;"></div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+  const statusEl = document.getElementById('statusMsg');
+  const detailEl = document.getElementById('detail');
+  const setupBanner = document.getElementById('setupBanner');
+  const migrateBtn = document.getElementById('migrateBtn');
+
+  let db = null;
+  if (typeof firebaseConfig !== 'undefined' && firebaseConfig.apiKey !== 'YOUR_API_KEY') {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+  } else {
+    setupBanner.innerHTML =
+      '<div class="setup-banner">⚠️ firebase-config.js가 설정되지 않았습니다.</div>';
+    migrateBtn.disabled = true;
+  }
+
+  migrateBtn.addEventListener('click', () => {
+    if (!db) return;
+    if (!confirm('projects/project1 아래에 이미 데이터가 있다면 덮어씌워질 수 있습니다. 계속할까요?')) return;
+
+    migrateBtn.disabled = true;
+    statusEl.textContent = '루트 데이터를 읽는 중…';
+    statusEl.className = 'status-msg';
+    detailEl.textContent = '';
+
+    Promise.all([
+      db.ref('questions').once('value'),
+      db.ref('session').once('value'),
+      db.ref('answers').once('value'),
+      db.ref('savedResults').once('value')
+    ]).then(([qSnap, sSnap, aSnap, srSnap]) => {
+      const updates = {};
+      const found = [];
+
+      if (qSnap.val()) { updates['projects/project1/questions'] = qSnap.val(); found.push('questions'); }
+      if (sSnap.val()) { updates['projects/project1/session'] = sSnap.val(); found.push('session'); }
+      if (aSnap.val()) { updates['projects/project1/answers'] = aSnap.val(); found.push('answers'); }
+      if (srSnap.val()) { updates['projects/project1/savedResults'] = srSnap.val(); found.push('savedResults'); }
+
+      if (found.length === 0) {
+        statusEl.textContent = '루트에 옮길 데이터가 없습니다. (이미 옮겼거나, 원래 비어있었을 수 있습니다)';
+        migrateBtn.disabled = false;
+        return Promise.resolve(null);
+      }
+
+      detailEl.textContent = '발견된 데이터: ' + found.join(', ');
+      statusEl.textContent = 'projects/project1 로 복사하는 중…';
+
+      return db.ref().update(updates).then(() => {
+        statusEl.textContent = '완료되었습니다 ✓ 이제 admin.html (project1)에서 기존 질문/답변이 그대로 보이는지 확인해보세요.';
+        statusEl.className = 'status-msg';
+      });
+    }).catch((err) => {
+      statusEl.textContent = '오류: ' + err.message;
+      statusEl.className = 'status-msg error';
+      migrateBtn.disabled = false;
+    });
+  });
+</script>
+
+</body>
+</html>

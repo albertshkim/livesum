@@ -72,7 +72,7 @@ if (typeof firebaseConfig !== 'undefined' && firebaseConfig.apiKey !== 'YOUR_API
 }
 
 if (dbReady) {
-  db.ref('session/activeQuestionNumber').on('value', (snap) => {
+  db.ref(projectPath('session/activeQuestionNumber')).on('value', (snap) => {
     liveActiveNumber = snap.val();
     if (!isReplaying) {
       activeNumber = liveActiveNumber;
@@ -81,13 +81,13 @@ if (dbReady) {
   });
 
   // 관리자가 설정한 질문 글자 크기를 실시간 반영
-  db.ref('session/questionFontSize').on('value', (snap) => {
+  db.ref(projectPath('session/questionFontSize')).on('value', (snap) => {
     const px = snap.val();
     questionEl.style.fontSize = px ? px + 'px' : '';
   });
 
   // 저장된 결과 목록 (질문+답변 스냅샷) 실시간 구독
-  db.ref('savedResults').on('value', (snap) => {
+  db.ref(projectPath('savedResults')).on('value', (snap) => {
     renderSavedList(snap.val() || {});
   });
 } else {
@@ -125,7 +125,7 @@ function switchToQuestion(num) {
   questionLabelEl.textContent = '실시간 집계 중';
   questionNumberEl.textContent = num;
 
-  questionRef = db.ref('questions/' + num + '/text');
+  questionRef = db.ref(projectPath('questions/' + num + '/text'));
   questionRef.on('value', (snap) => {
     const q = snap.val();
     currentQuestionText = q && q.trim() ? q : '(질문 내용 없음)';
@@ -133,7 +133,7 @@ function switchToQuestion(num) {
     updateQuestionRecap(num, currentQuestionText);
   });
 
-  answersRef = db.ref('answers/' + num);
+  answersRef = db.ref(projectPath('answers/' + num));
   answersRef.on('child_added', (snap) => {
     const val = snap.val();
     if (!val || !val.text) return;
@@ -485,7 +485,7 @@ saveResultBtn.addEventListener('click', () => {
     return;
   }
 
-  db.ref('savedResults').push({
+  db.ref(projectPath('savedResults')).push({
     questionNumber: activeNumber,
     questionText: currentQuestionText,
     answers: answerTexts.slice(),
@@ -658,7 +658,7 @@ function copySavedEntry(entry) {
 
 function deleteSavedEntry(id) {
   if (!confirm('이 저장 항목을 삭제할까요? 되돌릴 수 없습니다.')) return;
-  db.ref('savedResults/' + id).remove().catch((err) => {
+  db.ref(projectPath('savedResults/' + id)).remove().catch((err) => {
     showCopyStatus('삭제 실패: ' + err.message, true);
   });
 }

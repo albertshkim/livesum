@@ -10,6 +10,8 @@
 | `index.html` / `ask.js` | 참가자가 질문을 보고 답변을 제출하는 화면 |
 | `board.html` / `board.js` | 답변이 들어오는 즉시 표시되는 실시간 집계 보드 (발표 화면 등에 띄워두는 용도) |
 | `admin.html` / `admin.js` | 질문 등록/변경, 답변 초기화 (암호 없이 바로 사용, 링크를 아는 사람만 접근한다고 가정) |
+| `project.js` | URL의 `?project=이름` 값을 읽어 어느 프로젝트의 데이터를 쓸지 결정하는 공용 스크립트 |
+| `migrate.html` | 프로젝트 네임스페이스 도입 전 데이터를 `projects/project1`로 옮기는 1회용 도구 |
 | `firebase-config.js` ⚠️비공개 | 본인의 Firebase 프로젝트 키가 담긴 실제 설정 파일. **git에 올리지 않습니다** |
 | `firebase-config.example.js` | 위 파일의 값 없는 템플릿. 이건 git에 올려도 안전합니다 |
 | `auth-config.js` ⚠️비공개 | 실제 접속 비밀번호가 담긴 파일. **git에 올리지 않습니다** |
@@ -19,6 +21,29 @@
 | `style.css` | 공용 디자인 |
 | `.gitignore` | `firebase-config.js`, `auth-config.js`가 실수로도 커밋되지 않도록 막는 설정 |
 | `.github/workflows/deploy.yml` | GitHub Secrets 값으로 두 비공개 설정 파일을 자동 생성해 GitHub Pages에 배포하는 워크플로우 |
+
+## 여러 프로젝트(세션) 독립적으로 운영하기
+
+이 사이트는 URL에 붙는 `?project=이름` 파라미터로 완전히 분리된 데이터 공간을
+씁니다. 예를 들어:
+
+- `admin.html?project=project1` / `index.html?project=project1` / `board.html?project=project1`
+  → "project1"의 질문·답변·저장된 결과
+- `admin.html?project=project2` / `index.html?project=project2` / `board.html?project=project2`
+  → "project2"의 질문·답변·저장된 결과 (project1과 전혀 섞이지 않음)
+
+파라미터를 안 붙이면 자동으로 `project1`로 취급되어, 기존에 만들어둔 링크도
+그대로 작동합니다.
+
+**새 프로젝트를 시작하려면** 코드를 고칠 필요 없이, `admin.html?project=project2`
+같은 주소로 접속해서 질문을 새로 등록하면 됩니다. 관리자 화면 상단의
+**"프로젝트 전환"** 입력창에 이름을 넣고 이동해도 됩니다. 참가자·보드 링크는
+그 프로젝트 이름을 붙여서 공유하면 됩니다 (예: `index.html?project=project2`,
+`board.html?project=project2`).
+
+> 프로젝트 이름은 영문/숫자/하이픈(-)/언더스코어(_)만 허용됩니다. 한글이나
+> 특수문자를 입력하면 자동으로 제거되니, `sales-2026`, `team_a` 처럼 영문으로
+> 짓는 걸 추천합니다.
 
 ## 비밀값을 저장소에 올리지 않고 배포하기
 
@@ -102,34 +127,45 @@ GitHub Secrets에 별도로 등록**합니다.
 
 ## 3. 데이터베이스 구조
 
+모든 데이터는 `projects/{프로젝트 이름}/` 아래에 프로젝트별로 완전히
+분리되어 저장됩니다.
+
 ```
-questions/
-  1/  { text: "직업은 무엇인가요?", updatedAt: ... }
-  2/  { text: "연령대는 어떻게 되나요?", updatedAt: ... }
+projects/
+  project1/
+    questions/
+      1/  { text: "직업은 무엇인가요?", updatedAt: ... }
+      2/  { text: "연령대는 어떻게 되나요?", updatedAt: ... }
 
-session/
-  activeQuestionNumber: 1        # 지금 참가자 화면에 표시 중인 질문 번호
+    session/
+      activeQuestionNumber: 1        # 지금 참가자 화면에 표시 중인 질문 번호
 
-answers/
-  1/
-    -Nabc123/ { text: "...", ts: ... }
-    -Nabc124/ { text: "...", ts: ... }
-  2/
-    -Nabc125/ { text: "...", ts: ... }
+    answers/
+      1/
+        -Nabc123/ { text: "...", ts: ... }
+        -Nabc124/ { text: "...", ts: ... }
+      2/
+        -Nabc125/ { text: "...", ts: ... }
 
-savedResults/
-  -Nxyz001/ {
-    questionNumber: 1,
-    questionText: "직업은 무엇인가요?",
-    answers: ["개발자", "디자이너", ...],
-    answerCount: 12,
-    savedAt: ...
-  }
+    savedResults/
+      -Nxyz001/ {
+        questionNumber: 1,
+        questionText: "직업은 무엇인가요?",
+        answers: ["개발자", "디자이너", ...],
+        answerCount: 12,
+        savedAt: ...
+      }
+
+  project2/
+    questions/ ...
+    session/ ...
+    answers/ ...
+    savedResults/ ...
 ```
 
-질문마다 답변이 `answers/{번호}` 아래에 별도로 영구 저장되므로, 관리자가 진행 질문을
-바꿔도 이전 질문에 쌓인 답변은 그대로 남아있습니다. 나중에 같은 번호를 다시 선택하면
-이전 답변이 그대로 다시 보입니다.
+질문마다 답변이 `projects/{프로젝트}/answers/{번호}` 아래에 별도로 영구 저장되므로,
+관리자가 진행 질문을 바꿔도 이전 질문에 쌓인 답변은 그대로 남아있습니다. 나중에
+같은 번호를 다시 선택하면 이전 답변이 그대로 다시 보입니다.
 
 `savedResults`는 이것과 별개로, `board.html`에서 **"결과 저장"** 버튼을 눌렀을 때만
 그 순간의 질문·답변 스냅샷이 통째로 저장되는 아카이브입니다. 예를 들어 전체 초기화를
@@ -139,38 +175,65 @@ savedResults/
 
 Firebase 콘솔 → Realtime Database → **규칙** 탭에서 아래처럼 설정하세요.
 누구나 답변을 "추가"는 할 수 있지만, 기존 답변을 수정/삭제하지는 못하게 막는 규칙입니다.
+`$projectId` 와일드카드 덕분에 어떤 프로젝트 이름을 쓰든 규칙을 다시 등록할
+필요가 없습니다.
 
 ```json
 {
   "rules": {
-    "questions": {
-      ".read": true,
-      ".write": true
-    },
-    "session": {
-      ".read": true,
-      ".write": true
-    },
-    "answers": {
-      ".read": true,
-      ".write": true,
-      "$qnum": {
-        "$answerId": {
-          ".write": "!data.exists()"
+    "projects": {
+      "$projectId": {
+        "questions": {
+          ".read": true,
+          ".write": true
+        },
+        "session": {
+          ".read": true,
+          ".write": true
+        },
+        "answers": {
+          ".read": true,
+          ".write": true,
+          "$qnum": {
+            "$answerId": {
+              ".write": "!data.exists()"
+            }
+          }
+        },
+        "savedResults": {
+          ".read": true,
+          ".write": true
         }
       }
-    },
-    "savedResults": {
-      ".read": true,
-      ".write": true
     }
   }
 }
 ```
 
+> 기존에 루트(`questions`, `session`, `answers`, `savedResults`)에 규칙을
+> 두셨다면, 위 내용으로 **전체 교체**하세요. 루트 경로는 더 이상 쓰지 않습니다.
+
+
 > 참고: `admin.html`에는 암호 확인이 없으므로, 이 링크를 아는 사람은 누구나
 > 질문을 등록·삭제하거나 답변을 초기화할 수 있습니다. 참가자에게는 `index.html`
 > 링크만 공유하고, `admin.html`은 진행자만 열어보세요.
+
+## 4-1. (기존에 이미 쓰고 계셨다면) 데이터 마이그레이션 — 딱 한 번만
+
+프로젝트 네임스페이스 구조가 없던 예전 버전을 이미 쓰고 계셨다면, 루트에
+`questions`, `session`, `answers`, `savedResults`가 남아있을 거예요. 이번 구조로
+바꾸면 사이트는 기본적으로 `projects/project1/...`를 읽으므로, 예전 데이터를
+그대로 옮겨줘야 안 보이던 게 다시 보입니다.
+
+1. 4번의 새 보안 규칙을 먼저 Publish 해두세요 (마이그레이션에도 필요합니다).
+2. `migrate.html`을 배포된 사이트에서 열고 (예: `https://<사용자명>.github.io/<저장소명>/migrate.html`)
+   **"마이그레이션 실행"** 버튼을 누르세요.
+3. 완료 메시지가 뜨면 `admin.html?project=project1`에서 예전 질문·답변이 그대로
+   보이는지 확인하세요.
+4. 확인이 끝나면 `migrate.html`은 다시 쓸 일이 없으니, 저장소에서 지워도 됩니다
+   (안 지워도 동작에는 문제없습니다).
+
+이미 새로 시작하는 경우(예전 데이터가 없는 경우)라면 이 단계는 건너뛰어도 됩니다.
 
 ## 5. GitHub Pages로 배포하기 (GitHub Actions + Secrets 방식)
 
@@ -218,7 +281,9 @@ Firebase 콘솔 → Realtime Database → **규칙** 탭에서 아래처럼 설�
 
 ## 6. 사용 방법
 
-1. `admin.html` 접속 (암호 없이 바로 사용 가능)
+1. `admin.html` 접속 (암호 없이 바로 사용 가능). 여러 프로젝트를 운영한다면
+   `admin.html?project=project2`처럼 이름을 붙여 접속하세요 (자세한 내용은
+   위 "여러 프로젝트 독립적으로 운영하기" 참고).
 2. **질문 일괄 등록** 칸에 아래처럼 번호를 붙여 여러 질문을 한 번에 붙여넣고 "일괄 등록" 클릭
    ```
    1. 직업은 무엇인가요?

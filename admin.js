@@ -6,7 +6,7 @@
 //   session/activeQuestionNumber -> 현재 참가자 화면에 노출 중인 질문 번호
 //   answers/{번호}/{pushId}   -> { text, ts }   (질문별로 영구 저장)
 //
-// ※ 이 관리자 화면은 암호 없이 동작합니다. admin.html 링크는 한번에 제어
+// ※ 이 관리자 화면은 암호 없이 동작합니다. admin.html 링크는
 //   참가자에게 공유하지 말고, 진행자만 알고 있는 별도 링크로 관리하세요.
 // ------------------------------------------------------------
 
@@ -114,8 +114,8 @@ registerBtn.addEventListener('click', () => {
 
   const updates = {};
   numbers.forEach((num) => {
-    updates['questions/' + num + '/text'] = parsed[num];
-    updates['questions/' + num + '/updatedAt'] = firebase.database.ServerValue.TIMESTAMP;
+    updates[projectPath('questions/' + num + '/text')] = parsed[num];
+    updates[projectPath('questions/' + num + '/updatedAt')] = firebase.database.ServerValue.TIMESTAMP;
   });
 
   db.ref().update(updates).then(() => {
@@ -131,12 +131,12 @@ registerBtn.addEventListener('click', () => {
 // 2) 등록된 질문 목록 실시간 표시
 // ------------------------------------------------------------
 if (dbReady) {
-  db.ref('session/activeQuestionNumber').on('value', (snap) => {
+  db.ref(projectPath('session/activeQuestionNumber')).on('value', (snap) => {
     activeNumber = snap.val();
     renderQuestionList();
   });
 
-  db.ref('questions').on('value', (snap) => {
+  db.ref(projectPath('questions')).on('value', (snap) => {
     questionsCache = snap.val() || {};
     renderQuestionList();
   });
@@ -196,7 +196,7 @@ function renderQuestionList() {
 }
 
 function activateQuestion(num) {
-  db.ref('session/activeQuestionNumber').set(num).then(() => {
+  db.ref(projectPath('session/activeQuestionNumber')).set(num).then(() => {
     showStatus(statusEl2, num + '번 질문이 참가자 화면에 표시됩니다 ✓', false);
   }).catch((err) => {
     showStatus(statusEl2, '오류: ' + err.message, true);
@@ -206,9 +206,9 @@ function activateQuestion(num) {
 function deleteQuestion(num) {
   if (!confirm(num + '번 질문을 삭제할까요? (해당 질문에 쌓인 답변은 유지됩니다)')) return;
 
-  db.ref('questions/' + num).remove().then(() => {
+  db.ref(projectPath('questions/' + num)).remove().then(() => {
     if (String(activeNumber) === String(num)) {
-      db.ref('session/activeQuestionNumber').remove();
+      db.ref(projectPath('session/activeQuestionNumber')).remove();
     }
     showStatus(statusEl2, num + '번 질문이 삭제되었습니다.', false);
   }).catch((err) => {
@@ -230,7 +230,7 @@ resetBtn.addEventListener('click', () => {
   }
   if (!confirm(activeNumber + '번 질문의 답변을 모두 삭제할까요? 이 작업은 되돌릴 수 없습니다.')) return;
 
-  db.ref('answers/' + activeNumber).remove().then(() => {
+  db.ref(projectPath('answers/' + activeNumber)).remove().then(() => {
     showStatus(statusEl3, activeNumber + '번 질문의 답변이 초기화되었습니다 ✓', false);
   }).catch((err) => {
     showStatus(statusEl3, '오류: ' + err.message, true);
@@ -254,14 +254,16 @@ resetAllBtn.addEventListener('click', () => {
     return;
   }
 
+  // 현재 프로젝트(PROJECT_ID) 안의 질문·답변·세션만 지웁니다. 다른 프로젝트의
+  // 데이터는 영향받지 않습니다.
   db.ref().update({
-    questions: null,
-    answers: null,
-    session: null
+    [projectPath('questions')]: null,
+    [projectPath('answers')]: null,
+    [projectPath('session')]: null
   }).then(() => {
     bulkInput.value = '';
     updatePreview();
-    showStatus(statusEl4, '모든 질문과 답변이 초기화되었습니다 ✓', false);
+    showStatus(statusEl4, '"' + PROJECT_ID + '" 프로젝트의 모든 질문과 답변이 초기화되었습니다 ✓', false);
   }).catch((err) => {
     showStatus(statusEl4, '오류: ' + err.message, true);
   });
@@ -283,7 +285,7 @@ function saveFontSize(px) {
     showStatus(statusEl5, 'Firebase 설정이 완료되지 않았습니다.', true);
     return;
   }
-  db.ref('session/questionFontSize').set(Number(px)).then(() => {
+  db.ref(projectPath('session/questionFontSize')).set(Number(px)).then(() => {
     showStatus(statusEl5, '글자 크기가 적용되었습니다 (' + px + 'px) ✓', false);
   }).catch((err) => {
     showStatus(statusEl5, '오류: ' + err.message, true);
@@ -296,7 +298,7 @@ function scheduleSaveFontSize(px) {
 }
 
 if (dbReady) {
-  db.ref('session/questionFontSize').on('value', (snap) => {
+  db.ref(projectPath('session/questionFontSize')).on('value', (snap) => {
     const px = snap.val() || DEFAULT_FONT_SIZE;
     fontSizeSlider.value = px;
     applyPreviewSize(px);

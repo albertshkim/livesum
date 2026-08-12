@@ -35,13 +35,13 @@ if (typeof firebaseConfig !== 'undefined' && firebaseConfig.apiKey !== 'YOUR_API
 
 if (dbReady) {
   // 관리자가 선택한 "현재 질문 번호"를 구독
-  db.ref('session/activeQuestionNumber').on('value', (snap) => {
+  db.ref(projectPath('session/activeQuestionNumber')).on('value', (snap) => {
     activeNumber = snap.val();
     attachQuestionListener();
   });
 
   // 관리자가 설정한 질문 글자 크기를 실시간 반영
-  db.ref('session/questionFontSize').on('value', (snap) => {
+  db.ref(projectPath('session/questionFontSize')).on('value', (snap) => {
     const px = snap.val();
     questionEl.style.fontSize = px ? px + 'px' : '';
   });
@@ -60,7 +60,7 @@ function attachQuestionListener() {
     return;
   }
   questionNumberEl.textContent = activeNumber;
-  const ref = db.ref('questions/' + activeNumber + '/text');
+  const ref = db.ref(projectPath('questions/' + activeNumber + '/text'));
   ref.on('value', (snap) => {
     const text = snap.val();
     questionEl.innerHTML = renderQuestionMarkup(text && text.trim() ? text : '질문을 불러오는 중…');
@@ -100,7 +100,7 @@ function submitAnswer() {
   submitBtn.disabled = true;
   showStatus('제출 중…', false);
 
-  db.ref('answers/' + activeNumber).push({
+  db.ref(projectPath('answers/' + activeNumber)).push({
     text: text,
     ts: firebase.database.ServerValue.TIMESTAMP
   }).then(() => {
