@@ -20,6 +20,7 @@ const saveResultBtn = document.getElementById('saveResultBtn');
 const savedListEl = document.getElementById('savedList');
 const savedCountLabel = document.getElementById('savedCountLabel');
 const savedSortSelect = document.getElementById('savedSortSelect');
+const applySavedSortBtn = document.getElementById('applySavedSortBtn');
 const viewCloudBtn = document.getElementById('viewCloudBtn');
 const viewCardBtn = document.getElementById('viewCardBtn');
 const wordcloudWrap = document.getElementById('wordcloudWrap');
@@ -605,7 +606,15 @@ function sortSavedEntries(entries, sortMode) {
     case 'savedAtAsc':
       sorted.sort((a, b) => (a.savedAt || 0) - (b.savedAt || 0));
       break;
+    case 'savedAtDesc':
+      sorted.sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
+      break;
+    case 'questionText':
+      sorted.sort((a, b) =>
+        (a.questionText || '').localeCompare((b.questionText || ''), 'ko'));
+      break;
     case 'questionNumber':
+    default:
       sorted.sort((a, b) => {
         const an = Number(a.questionNumber);
         const bn = Number(b.questionNumber);
@@ -615,19 +624,19 @@ function sortSavedEntries(entries, sortMode) {
         return an - bn;
       });
       break;
-    case 'questionText':
-      sorted.sort((a, b) =>
-        (a.questionText || '').localeCompare((b.questionText || ''), 'ko'));
-      break;
-    case 'savedAtDesc':
-    default:
-      sorted.sort((a, b) => (b.savedAt || 0) - (a.savedAt || 0));
-      break;
   }
   return sorted;
 }
 
 savedSortSelect.addEventListener('change', () => {
+  renderSavedList(latestSavedDataObj);
+});
+// 일부 브라우저/환경에서 select의 change 이벤트가 안정적으로 안 잡히는 경우를
+// 대비해 input 이벤트도 같이 걸고, 명시적으로 누를 수 있는 "적용" 버튼도 둡니다.
+savedSortSelect.addEventListener('input', () => {
+  renderSavedList(latestSavedDataObj);
+});
+applySavedSortBtn.addEventListener('click', () => {
   renderSavedList(latestSavedDataObj);
 });
 

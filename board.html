@@ -61,11 +61,12 @@
       <div class="saved-header-left">
         <div class="noun-freq-title" style="margin-bottom:0;">저장된 결과 목록</div>
         <select class="sort-select" id="savedSortSelect">
+          <option value="questionNumber" selected>질문 번호순</option>
           <option value="savedAtDesc">최신순</option>
           <option value="savedAtAsc">오래된순</option>
-          <option value="questionNumber">질문 번호순</option>
           <option value="questionText">제목순 (가나다)</option>
         </select>
+        <button class="btn-small" type="button" id="applySavedSortBtn">적용</button>
       </div>
       <span class="noun-freq-hint" id="savedCountLabel">0개 저장됨</span>
     </div>
