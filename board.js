@@ -26,6 +26,9 @@ const wordcloudCanvas = document.getElementById('wordcloudCanvas');
 const cloudEmptyState = document.getElementById('cloudEmptyState');
 const nounFreqWrap = document.getElementById('nounFreqWrap');
 const nounFreqListEl = document.getElementById('nounFreqList');
+const excludedWordsWrap = document.getElementById('excludedWordsWrap');
+const excludedWordsListEl = document.getElementById('excludedWordsList');
+const restoreAllExcludedBtn = document.getElementById('restoreAllExcludedBtn');
 const originalWrap = document.getElementById('originalWrap');
 const originalListEl = document.getElementById('originalList');
 const originalCountLabel = document.getElementById('originalCountLabel');
@@ -47,11 +50,13 @@ let answersRef = null;
 let count = 0;
 let lastCard = null;
 let answerTexts = []; // 복사/워드클라우드용으로 답변 원문을 순서대로 보관
+let answerEntries = []; // [{id, text}] - 카드 삭제 시 실제 Firebase 답변 id를 찾기 위한 배열 (answerTexts와 항상 같은 순서로 유지)
 let currentQuestionText = ''; // "결과 저장" 시 서식(줄바꿈 등)을 유지하기 위한 원본 질문 텍스트
 let currentView = 'cloud'; // 'cloud' | 'card'
 let redrawTimer = null;
 let latestNounList = [];
 let selectedWords = new Set(); // 명사 빈도표에서 클릭으로 선택한 단어들 (OR 조건)
+let excludedWords = new Set(); // 명사 빈도표(상위 15개)에서 제외 처리한 단어들
 let showAllOriginals = false; // "모든 원문 보기" 토글 상태
 
 if (typeof firebaseConfig !== 'undefined' && firebaseConfig.apiKey !== 'YOUR_API_KEY') {
@@ -107,7 +112,9 @@ function switchToQuestion(num) {
   count = 0;
   lastCard = null;
   answerTexts = [];
+  answerEntries = [];
   selectedWords.clear();
+  excludedWords.clear();
   showAllOriginals = false;
   countEl.textContent = '0';
   gridEl.innerHTML = '<div class="empty-state">아직 도착한 답변이 없습니다.</div>';
@@ -137,6 +144,7 @@ function switchToQuestion(num) {
   answersRef.on('child_added', (snap) => {
     const val = snap.val();
     if (!val || !val.text) return;
+    const answerId = snap.key;
 
     if (count === 0) {
       gridEl.innerHTML = '';
@@ -144,12 +152,19 @@ function switchToQuestion(num) {
     count += 1;
     countEl.textContent = count;
     answerTexts.push(val.text);
+    answerEntries.push({ id: answerId, text: val.text });
 
     const card = document.createElement('div');
     card.className = 'card newest';
+    card.dataset.answerId = answerId;
     card.innerHTML =
+      '<button class="card-delete-btn" type="button" title="이 답변 삭제">✕</button>' +
       escapeHtml(val.text) +
       '<span class="ts">' + formatTime(val.ts) + '</span>';
+    card.querySelector('.card-delete-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteAnswer(num, answerId);
+    });
 
     if (lastCard) lastCard.classList.remove('newest');
     gridEl.prepend(card);
@@ -158,10 +173,42 @@ function switchToQuestion(num) {
     scheduleCloudRedraw();
   });
 
-  answersRef.on('child_removed', () => {
+  answersRef.on('child_removed', (snap) => {
+    const answerId = snap.key;
+
+    // 화면에 있는 해당 카드 제거
+    const cardEl = gridEl.querySelector('.card[data-answer-id="' + cssEscape(answerId) + '"]');
+    if (cardEl) cardEl.remove();
+    if (lastCard === cardEl) lastCard = gridEl.querySelector('.card');
+
+    // 배열에서도 같은 항목 제거 (워드클라우드/명사 빈도표/원문 보기 등에 반영되도록)
+    const idx = answerEntries.findIndex((e) => e.id === answerId);
+    if (idx !== -1) {
+      answerEntries.splice(idx, 1);
+      answerTexts.splice(idx, 1);
+    }
+
     count = Math.max(0, count - 1);
     countEl.textContent = count;
+
+    if (count === 0) {
+      gridEl.innerHTML = '<div class="empty-state">아직 도착한 답변이 없습니다.</div>';
+    }
+
+    scheduleCloudRedraw();
   });
+}
+
+function deleteAnswer(num, answerId) {
+  if (!confirm('이 답변을 삭제할까요? 되돌릴 수 없습니다.')) return;
+  db.ref(projectPath('answers/' + num + '/' + answerId)).remove().catch((err) => {
+    showCopyStatus('답변 삭제 실패: ' + err.message, true);
+  });
+}
+
+// CSS.escape 폴리필 (구형 브라우저 대비 아주 단순한 버전)
+function cssEscape(str) {
+  return String(str).replace(/[^a-zA-Z0-9_-]/g, '\\$&');
 }
 
 // ------------------------------------------------------------
@@ -265,6 +312,7 @@ function extractNouns(texts) {
     });
   });
   return Object.keys(freq)
+    .filter((word) => !excludedWords.has(word)) // 제외 처리한 단어는 순위 계산에서 아예 뺌 (다음 순위 단어가 그 자리를 채움)
     .map((word) => [word, freq[word]])
     .sort((a, b) => b[1] - a[1])
     .slice(0, 15);
@@ -274,7 +322,10 @@ function renderNounFreqTable(list) {
   latestNounList = list || [];
 
   if (latestNounList.length === 0) {
-    nounFreqListEl.innerHTML = '<div class="empty-state-small">아직 집계할 답변이 없습니다.</div>';
+    nounFreqListEl.innerHTML = excludedWords.size > 0
+      ? '<div class="empty-state-small">표시할 단어가 없습니다. (제외한 단어가 있다면 아래에서 복원해보세요)</div>'
+      : '<div class="empty-state-small">아직 집계할 답변이 없습니다.</div>';
+    renderExcludedWordsChips();
     return;
   }
   const maxCount = latestNounList[0][1];
@@ -290,10 +341,62 @@ function renderNounFreqTable(list) {
       '<span class="noun-freq-bar-wrap"><span class="noun-freq-bar" style="width:' +
         Math.round((cnt / maxCount) * 100) + '%"></span></span>' +
       '<span class="noun-freq-count">' + cnt + '</span>';
+
+    const excludeBtn = document.createElement('button');
+    excludeBtn.className = 'noun-freq-exclude-btn';
+    excludeBtn.type = 'button';
+    excludeBtn.title = '"' + word + '" 목록에서 제외';
+    excludeBtn.textContent = '✕';
+    excludeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      excludeWord(word);
+    });
+    row.appendChild(excludeBtn);
+
     row.addEventListener('click', () => toggleWordSelection(word));
     nounFreqListEl.appendChild(row);
   });
+
+  renderExcludedWordsChips();
 }
+
+// ------------------------------------------------------------
+// 명사 빈도표에서 특정 단어 제외 / 복원
+// ------------------------------------------------------------
+function excludeWord(word) {
+  excludedWords.add(word);
+  selectedWords.delete(word); // 제외하면 선택도 함께 해제
+  renderNounFreqTable(extractNouns(answerTexts));
+  renderOriginalTexts();
+}
+
+function restoreWord(word) {
+  excludedWords.delete(word);
+  renderNounFreqTable(extractNouns(answerTexts));
+}
+
+function renderExcludedWordsChips() {
+  if (excludedWords.size === 0) {
+    excludedWordsWrap.style.display = 'none';
+    return;
+  }
+  excludedWordsWrap.style.display = 'flex';
+  excludedWordsListEl.innerHTML = '';
+  Array.from(excludedWords).forEach((word) => {
+    const chip = document.createElement('button');
+    chip.className = 'excluded-chip';
+    chip.type = 'button';
+    chip.title = '"' + word + '" 다시 포함시키기';
+    chip.textContent = word + ' ↺';
+    chip.addEventListener('click', () => restoreWord(word));
+    excludedWordsListEl.appendChild(chip);
+  });
+}
+
+restoreAllExcludedBtn.addEventListener('click', () => {
+  excludedWords.clear();
+  renderNounFreqTable(extractNouns(answerTexts));
+});
 
 // ------------------------------------------------------------
 // 단어 선택(다중 · OR 조건) 및 원문 필터링
@@ -594,9 +697,11 @@ function enterReplay(entry) {
   updateQuestionRecap(activeNumber, currentQuestionText);
 
   answerTexts = (entry.answers || []).slice();
+  answerEntries = []; // 재생(스냅샷) 카드는 실제 Firebase id가 없어 삭제 버튼을 붙이지 않음
   count = answerTexts.length;
   countEl.textContent = count;
   selectedWords.clear();
+  excludedWords.clear();
   showAllOriginals = false;
 
   rebuildCardGrid();

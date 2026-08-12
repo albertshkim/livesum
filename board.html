@@ -84,10 +84,15 @@
   <div class="noun-freq-wrap" id="nounFreqWrap">
     <div class="noun-freq-title">
       명사 기준 단어 빈도 (상위 15개)
-      <span class="noun-freq-hint">· 조사를 제거한 간단한 추정 방식입니다</span>
+      <span class="noun-freq-hint">· 조사를 제거한 간단한 추정 방식입니다 · 단어 오른쪽 ✕로 제외 가능</span>
     </div>
     <div class="noun-freq-list" id="nounFreqList">
       <div class="empty-state-small">아직 집계할 답변이 없습니다.</div>
+    </div>
+    <div class="excluded-words" id="excludedWordsWrap" style="display:none;">
+      <span class="noun-freq-hint">제외됨:</span>
+      <span id="excludedWordsList"></span>
+      <button class="btn-small" type="button" id="restoreAllExcludedBtn">전체 복원</button>
     </div>
   </div>
 
