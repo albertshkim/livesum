@@ -70,11 +70,17 @@
 ## 접속 비밀번호
 
 세 화면(`index.html`, `board.html`, `admin.html`) 모두 접속 시 비밀번호를 먼저
-물어봅니다. 로컬에서 테스트할 땐 `auth-config.example.js`를 복사해서
-`auth-config.js`로 저장하고, 그 안의 `SITE_PASSWORD` 값을 원하는 비밀번호로
-바꾸면 됩니다. 실제 배포 시 사용할 비밀번호는 GitHub 저장소 Secrets에
-`SITE_PASSWORD`라는 이름으로 등록해두세요 (아래 5번 참고). 한 번 맞으면
-브라우저를 닫기 전까지(세션 동안)는 다시 묻지 않습니다.
+물어봅니다. **`admin.html`은 다른 두 화면과 별도의 비밀번호**를 씁니다.
+
+- `SITE_PASSWORD` → `index.html`(참가자 화면), `board.html`(집계 보드) 공용
+- `ADMIN_PASSWORD` → `admin.html`(관리자 화면) 전용
+
+로컬에서 테스트할 땐 `auth-config.example.js`를 복사해서 `auth-config.js`로
+저장하고, 그 안의 두 값을 각각 원하는 비밀번호로 바꾸면 됩니다. 실제 배포 시
+사용할 값은 GitHub 저장소 Secrets에 `SITE_PASSWORD`, `ADMIN_PASSWORD`라는
+이름으로 각각 등록해두세요 (아래 5번 참고). 한 번 맞으면 브라우저를 닫기
+전까지(세션 동안)는 다시 묻지 않으며, 참가자 화면 비밀번호를 맞췄다고 해서
+관리자 화면까지 자동으로 풀리지는 않습니다 (반대도 마찬가지).
 
 > ⚠️ 브라우저 코드로 값이 전달되는 방식 자체는 그대로라, 배포된 사이트에서는
 > 개발자도구로 우회할 수 있는 수준입니다. 아무나 못 들어오게 막는 가벼운 문
@@ -250,7 +256,7 @@ Firebase 콘솔 → Realtime Database → **규칙** 탭에서 아래처럼 설�
 **5-2. 저장소에 Secrets 등록하기**
 
 저장소 페이지 → **Settings → Secrets and variables → Actions** →
-**New repository secret** 을 눌러서 아래 8개를 하나씩 등록하세요.
+**New repository secret** 을 눌러서 아래 9개를 하나씩 등록하세요.
 (이름은 정확히 아래와 똑같이, 값은 본인의 Firebase 프로젝트 값과 원하는
 비밀번호로)
 
@@ -263,7 +269,8 @@ Firebase 콘솔 → Realtime Database → **규칙** 탭에서 아래처럼 설�
 | `FIREBASE_STORAGE_BUCKET` | firebase-config.js의 `storageBucket` |
 | `FIREBASE_MESSAGING_SENDER_ID` | firebase-config.js의 `messagingSenderId` |
 | `FIREBASE_APP_ID` | firebase-config.js의 `appId` |
-| `SITE_PASSWORD` | 세 화면 접속 비밀번호 |
+| `SITE_PASSWORD` | 참가자 화면·집계 보드 접속 비밀번호 |
+| `ADMIN_PASSWORD` | 관리자 화면(admin.html) 전용 비밀번호 (위와 다르게) |
 
 **5-3. Pages 소스를 GitHub Actions로 설정**
 
