@@ -10,7 +10,7 @@
 // ------------------------------------------------------------
 
 // index.html(참가자 화면), board.html(집계 보드)에서 쓰는 비밀번호
-const SITE_PASSWORD = 'Kantar1';
+const SITE_PASSWORD = 'xxxx';
 
 // admin.html(관리자 화면) 전용 비밀번호 - 위와 다르게 설정하세요
-const ADMIN_PASSWORD = 'AdminKantar4';
+const ADMIN_PASSWORD = 'xxxx';
