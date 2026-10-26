@@ -42,6 +42,7 @@ jobs:
         run: |
           cat > auth-config.js << EOF
           const SITE_PASSWORD = "${{ secrets.SITE_PASSWORD }}";
+          const ADMIN_PASSWORD = "${{ secrets.ADMIN_PASSWORD }}";
           EOF
 
       - name: Pages 아티팩트 업로드
